@@ -105,7 +105,7 @@ Options (`/tokentaby:init …`, or `node <plugin>/scripts/tokentaby.js init …`
 
 | Option | Effect |
 |---|---|
-| `--sync ride-along \| auto-commit \| manual` | how usage reaches git (see [Git sync modes](#git-sync-modes)); default `ride-along` |
+| `--sync ride-along \| auto-commit \| manual` | how usage reaches git (see [How syncing works](#how-syncing-works-and-how-the-team-sees-it)); default `ride-along` |
 | `--prompt-mode truncated \| hash_only \| full` | team privacy policy for prompt text; default `truncated` |
 | `--ci` | also write `.github/workflows/tokentaby.yml` (the CI guard) |
 | `--hook-in-tracked-dir` | install the hook even when `core.hooksPath` points at a tracked folder (husky & co.) |
@@ -213,19 +213,63 @@ Cost is stored with each event when it is written, so history stays stable when 
 
 ---
 
-## Git sync modes
+## How syncing works and how the team sees it
 
-Hooks never write into your working tree. New events wait in a spool inside `.git/tokentaby/`, so a Claude session never leaves `git status` dirty or blocks `checkout`, `pull --rebase` or `stash`. The spool moves into `.tokentaby/devs/<you>/<YYYY-MM>.ndjson` when usage ships:
+Usage moves through the same git flow as your code. No server is involved.
 
-| Mode | When usage ships |
+### 1. While you work: a private queue
+
+Every Claude reply in the repo is logged by the plugin's hooks to a queue inside `.git/tokentaby/`, under your `dev_id`. That folder isn't part of your working tree, so `git status` stays clean while you work, and a session never blocks `checkout`, `pull --rebase` or `stash`.
+
+### 2. When you commit: usage rides along
+
+The sync mode is set per repo in `.tokentaby/config.json`, or per developer in the plugin options.
+
+| Mode | What happens |
 |---|---|
-| **ride-along** (default) | the `pre-commit` hook adds your usage to the commit you're making anyway. No extra commits |
-| **auto-commit** | at session end, a separate `chore(usage): <dev> <date>` commit containing only your usage. Never pushed. Skipped during a rebase or merge, or on a detached HEAD |
-| **manual** | only when you run `/tokentaby:sync` |
+| **ride-along** (default) | Each time you `git commit` anything, the pre-commit hook moves your queue into `.tokentaby/devs/<your-id>/<YYYY-MM>.ndjson` and adds it to that same commit. No extra commits. |
+| **auto-commit** | At the end of each Claude session, one separate commit, `chore(usage): <you> <date>`, containing only your usage. Skipped during a rebase or merge, or on a detached HEAD. |
+| **manual** | Only when you run `/tokentaby:sync`. |
 
-In every mode the hook **refuses a commit** if a staged usage line looks like a credential. tokentaby only commits locally and **never pushes**, so it never uses your git credentials: usage goes up with your normal `git push`.
+In every mode the hook **refuses a commit** if a staged usage line looks like a credential. **tokentaby never pushes**, so it never uses your git credentials: your usage goes up with your normal `git push`.
 
-Each developer writes only their own `devs/<id>/` files, and `merge=union` resolves concurrent appends, so usage data never causes merge conflicts.
+### 3. Merging: no conflicts
+
+```
+.tokentaby/devs/
+├── sami/2026-10.ndjson    ← only Sami's commits touch this
+├── rafi/2026-10.ndjson    ← only Rafi's
+└── nadia/2026-10.ndjson
+```
+
+- Each developer writes only their own folder. The [CI check](#ci-guard) rejects a pull request that adds lines to someone else's.
+- The files are append-only, one line per event.
+- `merge=union` in `.tokentaby/.gitattributes` keeps both sides when two branches append to the same file, so these files never cause merge conflicts.
+
+### 4. Seeing the team: pull
+
+```
+Sami: commit → push → PR merged into main
+                                │
+Rafi: git pull  ◄───────────────┘
+      /tokentaby:usage      →  "you (rafi)" vs team, which now includes Sami
+      /tokentaby:dashboard  →  Developers page: one row per teammate
+```
+
+Each clone reads every developer's files in the branch you have checked out, plus your own unpushed queue, so your newest turns show up immediately. Teammates' usage arrives with `git pull`.
+
+- **`/tokentaby:usage`** shows today, this week and this month in two columns: you, and the whole team, with sessions and active developers.
+- **`/tokentaby:dashboard` → Developers** shows per developer: sessions, prompts, tokens, estimated cost, favourite model and subagent share. Click a name for that person's timeline and tasks.
+- **Overview, Models, Tasks** show team-wide totals and the top developers and tasks.
+
+> **Usage travels with branches.** Work done on a feature branch reaches everyone when that branch merges. A branch that's never merged keeps its usage to itself. For the latest team picture, look from an up-to-date `main`: `git checkout main && git pull`, then `/tokentaby:usage`.
+
+### Rolling out to a team (e.g. 15 developers)
+
+1. One person runs `/tokentaby:init` and commits `.tokentaby/`.
+2. Everyone installs the plugin and sets a `dev_id`.
+3. Everyone runs `/tokentaby:backfill` once.
+4. After that, it's automatic: commit, push, pull as usual.
 
 ---
 
