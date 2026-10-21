@@ -1,7 +1,7 @@
 ---
 name: tokentaby
 description: Answer questions about this repo's Claude Code usage and estimated cost from tokentaby's logs — e.g. "what did TKT-142 cost?", "who used the most Opus this week?", "how much do subagents add?", "which tasks were cheapest?", "what has the team been asking Claude?".
-allowed-tools: Bash(node:*)
+allowed-tools: Bash(node "${CLAUDE_PLUGIN_ROOT}/bin/tokentaby" query:*)
 ---
 
 # Usage analysis with tokentaby

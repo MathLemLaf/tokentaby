@@ -9,6 +9,7 @@ const os = require('os');
 const path = require('path');
 const http = require('http');
 const { spawnSync } = require('child_process');
+const fake = require('./fake-secrets');
 
 const ROOT = path.resolve(__dirname, '..');
 const COLLECT = path.join(ROOT, 'hooks', 'collect.js');
@@ -94,7 +95,7 @@ test('a session is collected into the clone-local spool', () => {
   assert.equal(hook({ hook_event_name: 'SessionStart', source: 'compact' }).stdout, '', 'the notice is shown once');
 
   hook({ hook_event_name: 'UserPromptSubmit', prompt: '/tt task TKT-9' });
-  hook({ hook_event_name: 'UserPromptSubmit', prompt: 'deploy with key AKIAABCDEFGHIJKLMNOP please' });
+  hook({ hook_event_name: 'UserPromptSubmit', prompt: `deploy with key ${fake.aws} please` });
   hook({ hook_event_name: 'Stop', stop_hook_active: false });
   hook({ hook_event_name: 'Stop', stop_hook_active: false }); // idempotent
   hook({ hook_event_name: 'SubagentStop', agent_id: 'agent01', agent_type: 'Explore', agent_transcript_path: path.join(projects, SESSION, 'subagents', 'agent-agent01.jsonl') });
@@ -173,7 +174,7 @@ test('validate passes clean data and flags foreign appends and secrets', () => {
 });
 
 test('the pre-commit hook refuses a logged secret', () => {
-  fs.appendFileSync(path.join(repo, '.git', 'tokentaby', 'spool.ndjson'), JSON.stringify({ v: 1, t: 'prompt', ts: '2026-10-21T12:00:00Z', dev: 'sami', session: 'x', hash: 'h', chars: 5, text: 'ghp_abcdefghijklmnopqrstuvwxyz0123456789AB' }) + '\n');
+  fs.appendFileSync(path.join(repo, '.git', 'tokentaby', 'spool.ndjson'), JSON.stringify({ v: 1, t: 'prompt', ts: '2026-10-21T12:00:00Z', dev: 'sami', session: 'x', hash: 'h', chars: 5, text: fake.github }) + '\n');
   fs.writeFileSync(path.join(repo, 'app.js'), 'console.log(3);\n');
   git('add', 'app.js');
   const r = sh('git', ['commit', '-q', '-m', 'oops'], { check: false });

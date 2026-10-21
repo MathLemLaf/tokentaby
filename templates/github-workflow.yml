@@ -25,8 +25,7 @@ jobs:
           repository: mdsami/tokentaby
           ref: tokentaby--v0.1.0 # release tag made by `claude plugin tag`; pin the version your team runs
           path: .tokentaby-plugin
-          # private plugin repo? add a read-only token:
-          # token: ${{ secrets.TOKENTABY_REPO_TOKEN }}
+          # private plugin repo: give this checkout read access (the `token` input of actions/checkout)
 
       - uses: actions/setup-node@v4
         with:

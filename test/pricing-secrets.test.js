@@ -6,6 +6,7 @@ const os = require('os');
 const path = require('path');
 const { loadPricing, normalizeModel, lookup, cost } = require('../lib/pricing');
 const { redact, scan } = require('../lib/secrets');
+const fake = require('./fake-secrets');
 
 const p = loadPricing(null);
 
@@ -64,22 +65,22 @@ test('fx table carries exactly the currencies Claude bills in', () => {
 
 test('secrets are redacted before anything is written', () => {
   const cases = [
-    ['deploy with AKIAABCDEFGHIJKLMNOP now', 'aws-access-key'],
-    ['token ghp_abcdefghijklmnopqrstuvwxyz0123456789AB', 'github-token'],
-    ['use sk-ant-api03-abcdefghijklmnopqrstuvwxyz', 'anthropic-key'],
-    ['xoxb-1234567890-abcdefghij', 'slack-token'],
-    ['eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U', 'jwt'],
-    ['postgres://admin:hunter22@db.internal:5432/app', 'url-credentials'],
-    ['set DB_PASSWORD="correct-horse-battery"', 'credential-assignment'],
-    ['-----BEGIN RSA PRIVATE KEY-----\nMIIEow\n-----END RSA PRIVATE KEY-----', 'private-key'],
+    [`deploy with ${fake.aws} now`, 'aws-access-key'],
+    [`token ${fake.github}`, 'github-token'],
+    [`use ${fake.anthropic}`, 'anthropic-key'],
+    [fake.slack, 'slack-token'],
+    [fake.jwt, 'jwt'],
+    [fake.pgUrl, 'url-credentials'],
+    [`set ${fake.passwordAssignment}`, 'credential-assignment'],
+    [fake.pem, 'private-key'],
   ];
   for (const [text, name] of cases) {
     const r = redact(text);
-    assert.ok(r.hits.includes(name), `${name} should hit: ${text}`);
+    assert.ok(r.hits.includes(name), `${name} should hit`);
     assert.ok(r.text.includes('[REDACTED]'));
     assert.deepEqual(scan(r.text), [], `redacted text must scan clean (${name})`);
   }
-  assert.equal(redact('postgres://admin:hunter22@db').text, 'postgres://admin:[REDACTED]@db');
-  assert.equal(redact('DB_PASSWORD="correct-horse-battery"').text, 'DB_PASSWORD="[REDACTED]"');
+  assert.equal(redact(fake.pgUrl).text, fake.pgUrlRedacted);
+  assert.equal(redact(fake.passwordAssignment).text, fake.passwordAssignmentRedacted);
   assert.deepEqual(scan('add retry to the webhook handler; the token count is 4000'), []);
 });

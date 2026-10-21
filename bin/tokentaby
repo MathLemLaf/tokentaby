@@ -34,7 +34,6 @@ Usage: tokentaby <command> [options]
                               set up .tokentaby/ in this repo and the git hook
   task <ID> | task none       attribute usage on this branch to a task
   sync                        commit your queued usage now (manual/auto-commit modes)
-  push                        git push the current branch
   status                      what is tracked, queued and configured in this clone
   query <view> [filters]      JSON for scripts and Claude: summary periods devs
                               dev <id> models agents tasks prompts events
@@ -277,16 +276,10 @@ const commands = {
     const repo = needRepo(a);
     const r = sync.commitUsage(repo);
     if (a.json) return print(r);
-    print(r.committed ? `Committed usage: ${r.message}\n  ${r.files.join('\n  ')}\n(not pushed — run tokentaby push or git push)` : `Nothing committed: ${r.reason}`);
+    print(r.committed ? `Committed usage: ${r.message}\n  ${r.files.join('\n  ')}\n(not pushed — it goes up with your next git push)` : `Nothing committed: ${r.reason}`);
     if (!r.committed && r.hits) process.exitCode = 1;
   },
 
-  push(a) {
-    const repo = needRepo(a);
-    const r = sync.push(repo);
-    print(r.output || (r.ok ? 'Pushed.' : 'Push failed.'));
-    if (!r.ok) process.exitCode = 1;
-  },
 
   status(a) {
     const repo = needRepo(a, { initialized: false });
@@ -432,7 +425,7 @@ const commands = {
     const rest = { ...a, _: a._.slice(1) };
     if (!sub) return commands.summary(rest);
     if (sub === 'serve' || sub === 'dashboard') return commands.serve({ ...rest, detach: !rest.stop });
-    if (!commands[sub] || sub === 'tt') throw new UsageError(`unknown /tt command "${sub}". Try: /tt, /tt init, /tt task <ID>, /tt sync, /tt push, /tt serve, /tt status`);
+    if (!commands[sub] || sub === 'tt') throw new UsageError(`unknown /tt command "${sub}". Try: /tt, /tt init, /tt backfill, /tt task <ID>, /tt serve, /tt snapshot, /tt sync, /tt status`);
     return commands[sub](rest);
   },
 };

@@ -79,13 +79,6 @@ claude plugin update tokentaby               # then restart Claude Code
 claude plugin uninstall tokentaby
 ```
 
-### Try it from a clone (no install)
-
-```bash
-git clone https://github.com/mdsami/tokentaby.git
-claude --plugin-dir ./tokentaby
-```
-
 ---
 
 ## Set up a repository (once per repo)
@@ -128,7 +121,6 @@ Options (terminal form: `node <plugin>/bin/tokentaby init …`, or `/tt init …
 | `/tt backfill` | import your past sessions in this repo (once) |
 | `/tt snapshot` | write the dashboard as one offline HTML file (`--no-prompts` to share safely) |
 | `/tt sync` | commit your queued usage now (manual / auto-commit modes) |
-| `/tt push` | `git push` the current branch |
 | *"what did TKT-142 cost?"* | Claude answers from the logs using the bundled `tokentaby` skill |
 
 Commands from plugins are namespaced, so `/tt` is also available as `/tokentaby:tt`, and the skill as `/tokentaby:tokentaby`.
@@ -226,9 +218,9 @@ Hooks never write into your working tree. New events wait in a spool inside `.gi
 |---|---|
 | **ride-along** (default) | the `pre-commit` hook adds your usage to the commit you're making anyway. No extra commits |
 | **auto-commit** | at session end, a separate `chore(usage): <dev> <date>` commit containing only your usage. Never pushed. Skipped during a rebase or merge, or on a detached HEAD |
-| **manual** | only when you run `/tt sync` (then `/tt push`) |
+| **manual** | only when you run `/tt sync` |
 
-In every mode the hook **refuses a commit** if a staged usage line looks like a credential.
+In every mode the hook **refuses a commit** if a staged usage line looks like a credential. tokentaby only commits locally and **never pushes**, so it never uses your git credentials: usage goes up with your normal `git push`.
 
 Each developer writes only their own `devs/<id>/` files, and `merge=union` resolves concurrent appends, so usage data never causes merge conflicts.
 
@@ -283,14 +275,14 @@ Optional, for teams that already export Claude Code OpenTelemetry. It imports `c
 
 ## CLI reference
 
-The CLI ships inside the plugin. Run it as `node <plugin-dir>/bin/tokentaby <command>`, or link it once with `npm link` from a clone.
+The CLI ships inside the plugin. Run it as `node <plugin-dir>/bin/tokentaby <command>`.
 
 ```
 summary                     today / week / month, you vs team (default)
 serve [--port N] [--detach] [--stop] [--no-open]
 init [--sync MODE] [--prompt-mode MODE] [--ci] [--hook-in-tracked-dir]
 task <ID> | task none
-sync | push | status
+sync | status
 query <view> [filters]      JSON: summary periods devs dev <id> models agents tasks prompts events
 export [--kind turns|prompts|devs|tasks|models] [--format csv|json] [--out FILE]
 rollup [--before YYYY-MM] [--drop-prompts] [--dry-run]

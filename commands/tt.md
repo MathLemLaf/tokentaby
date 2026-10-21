@@ -1,7 +1,7 @@
 ---
-description: tokentaby — Claude Code usage for this repo. No args = summary; or init, backfill, task <ID|none>, serve, snapshot, sync, push, status
-argument-hint: "[init | backfill | task <ID|none> | serve | snapshot | sync | push | status]"
-allowed-tools: Bash(node:*)
+description: tokentaby — Claude Code usage for this repo. No args = summary; or init, backfill, task <ID|none>, serve, snapshot, sync, status
+argument-hint: "[init | backfill | task <ID|none> | serve | snapshot | sync | status]"
+allowed-tools: Bash(node "${CLAUDE_PLUGIN_ROOT}/bin/tokentaby" tt:*)
 disable-model-invocation: true
 ---
 
