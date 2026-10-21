@@ -2,7 +2,7 @@
 
 **Claude Code usage tracking for teams: per repo, per developer, committed to git.**
 
-tokentaby is a Claude Code plugin that records every turn in a repository: tokens, model, main agent or subagent, task, branch, prompt and estimated cost. The data is stored as plain NDJSON inside the repo, so `git pull` gives every clone the whole team's numbers. It needs no server and no setup beyond installing the plugin. A local dashboard and a `/tt` command show the totals.
+tokentaby is a Claude Code plugin that records every turn in a repository: tokens, model, main agent or subagent, task, branch, prompt and estimated cost. The data is stored as plain NDJSON inside the repo, so `git pull` gives every clone the whole team's numbers. It needs no server and no setup beyond installing the plugin. A local dashboard and a `/tokentaby:usage` command show the totals.
 
 > **Costs are estimates.** Teams on Claude Pro / Max / Team subscriptions don't pay per token. tokentaby prices tokens at Anthropic's API list prices ("API-equivalent") for comparison and budgeting, never as a bill.
 
@@ -46,7 +46,7 @@ claude plugin install tokentaby@tokentaby
 
 The install asks for your **developer id** (`dev_id`): the name your usage is logged under, visible to your team. Use the part of your work email before the @, so the CI check can match your commits. To skip the prompt, pass `--config dev_id=sami`. tokentaby never reads your git identity or OS account, and it logs nothing until you choose an id.
 
-Restart Claude Code, or run `/reload-plugins`. That's all the per-developer setup. Each repo opts in once with `/tt init` (next section).
+Restart Claude Code, or run `/reload-plugins`. That's all the per-developer setup. Each repo opts in once with `/tokentaby:init` (next section).
 
 ### Roll it out to a team, pinned to one version
 
@@ -56,7 +56,7 @@ Pin the plugin in the repo so all developers run the same version and schema. Co
 {
   "extraKnownMarketplaces": {
     "tokentaby": {
-      "source": { "source": "github", "repo": "mdsami/tokentaby", "ref": "tokentaby--v0.1.0" }
+      "source": { "source": "github", "repo": "mdsami/tokentaby", "ref": "tokentaby--v0.1.1" }
     }
   },
   "enabledPlugins": {
@@ -88,7 +88,7 @@ claude plugin uninstall tokentaby
 In Claude Code, inside the repo you want to track:
 
 ```
-/tt init
+/tokentaby:init
 ```
 
 This creates `.tokentaby/` (price table, team policy, README, `merge=union` attributes) and installs a git `pre-commit` hook. Commit the folder so the whole team starts tracking:
@@ -99,9 +99,9 @@ git add .tokentaby && git commit -m "chore: add tokentaby usage tracking"
 
 Repos without `.tokentaby/` are never touched, because collection is opt-in per repo. Teammates need nothing beyond the plugin: their first session in the repo installs their own git hook.
 
-**Import your history:** `/tt backfill` reads this repo's past sessions from `~/.claude/projects/` and splits them into per-turn rows, so the dashboard has data from day one. It shares the live hooks' watermarks, so a session is never counted twice, and running it again imports nothing new. Each developer runs it once for their own history.
+**Import your history:** `/tokentaby:backfill` reads this repo's past sessions from `~/.claude/projects/` and splits them into per-turn rows, so the dashboard has data from day one. It shares the live hooks' watermarks, so a session is never counted twice, and running it again imports nothing new. Each developer runs it once for their own history.
 
-Options (terminal form: `node <plugin>/bin/tokentaby init …`, or `/tt init …`):
+Options (`/tokentaby:init …`, or `node <plugin>/bin/tokentaby init …` in a terminal):
 
 | Option | Effect |
 |---|---|
@@ -116,18 +116,18 @@ Options (terminal form: `node <plugin>/bin/tokentaby init …`, or `/tt init …
 
 | In Claude Code | What it does |
 |---|---|
-| `/tt` | today / this week / this month, **you vs the team** |
-| `/tt serve` | start the dashboard in the background → http://localhost:7331 |
-| `/tt task TKT-142` | attribute this branch's usage to a task (`/tt task none` clears it) |
-| `/tt status` | what's tracked, queued and configured in this clone |
-| `/tt backfill` | import your past sessions in this repo (once) |
-| `/tt snapshot` | write the dashboard as one offline HTML file (`--no-prompts` to share safely) |
-| `/tt sync` | commit your queued usage now (manual / auto-commit modes) |
+| `/tokentaby:usage` | today / this week / this month, **you vs the team** |
+| `/tokentaby:dashboard` | start the dashboard in the background → http://localhost:7331 |
+| `/tokentaby:task TKT-142` | attribute this branch's usage to a task (`/tokentaby:task none` clears it) |
+| `/tokentaby:status` | what's tracked, queued and configured in this clone |
+| `/tokentaby:backfill` | import your past sessions in this repo (once) |
+| `/tokentaby:snapshot` | write the dashboard as one offline HTML file (`--no-prompts` to share safely) |
+| `/tokentaby:sync` | commit your queued usage now (manual / auto-commit modes) |
 | *"what did TKT-142 cost?"* | Claude answers from the logs using the bundled `tokentaby` skill |
 
-Commands from plugins are namespaced, so `/tt` is also available as `/tokentaby:tt`, and the skill as `/tokentaby:tokentaby`.
+Plugin commands always carry the plugin's name, so type `/tokentaby:` to see them all with their descriptions. Questions need no command at all: just ask Claude.
 
-Example `/tt` output:
+Example `/tokentaby:usage` output:
 
 ```
 tokentaby · web-app · estimated API-equivalent cost (subscription usage, not a bill)
@@ -143,7 +143,7 @@ Queued, not yet committed: 12 events · sync: ride-along · prompts: truncated
 
 **Task attribution** is resolved in this order:
 
-1. explicit `/tt task TKT-142`
+1. explicit `/tokentaby:task TKT-142`
 2. a ticket id in the branch name (`feat/TKT-142-retry` → `TKT-142`)
 3. the Claude Code task-list subject
 4. none
@@ -153,14 +153,14 @@ Queued, not yet committed: 12 events · sync: ride-along · prompts: truncated
 ## The dashboard
 
 ```bash
-/tt serve                       # inside Claude Code (runs in the background)
+/tokentaby:dashboard            # inside Claude Code (runs in the background)
 node <plugin>/bin/tokentaby serve [--port 7331] [--no-open]
 node <plugin>/bin/tokentaby serve --stop
 ```
 
 A single-file local web app with no build step and no CDN, so it works offline. It binds to `127.0.0.1` only.
 
-> **Claude Code sandbox on?** A sandboxed Bash can't open local ports, so `/tt serve` reports `not allowed to open port`. Start the dashboard from the prompt with `!`, which runs the command in your own shell:
+> **Claude Code sandbox on?** A sandboxed Bash can't open local ports, so `/tokentaby:dashboard` reports `not allowed to open port`. Start the dashboard from the prompt with `!`, which runs the command in your own shell:
 > `! node <plugin>/bin/tokentaby serve --detach && open http://localhost:7331`
 > Alternatively, allow it with `"sandbox": { "network": { "allowLocalBinding": true } }` in your settings.
 
@@ -220,7 +220,7 @@ Hooks never write into your working tree. New events wait in a spool inside `.gi
 |---|---|
 | **ride-along** (default) | the `pre-commit` hook adds your usage to the commit you're making anyway. No extra commits |
 | **auto-commit** | at session end, a separate `chore(usage): <dev> <date>` commit containing only your usage. Never pushed. Skipped during a rebase or merge, or on a detached HEAD |
-| **manual** | only when you run `/tt sync` |
+| **manual** | only when you run `/tokentaby:sync` |
 
 In every mode the hook **refuses a commit** if a staged usage line looks like a credential. tokentaby only commits locally and **never pushes**, so it never uses your git credentials: usage goes up with your normal `git push`.
 
@@ -245,7 +245,7 @@ The first session in a tracked repo shows a one-time notice of what is logged. T
 
 ## CI guard
 
-`/tt init --ci` adds a GitHub Action that runs on pull requests touching `.tokentaby/`. It fails the PR when:
+`/tokentaby:init --ci` adds a GitHub Action that runs on pull requests touching `.tokentaby/`. It fails the PR when:
 
 - a log line is invalid JSON or doesn't match the schema;
 - a commit adds lines to **another developer's** log (author email → dev id, with aliases from `.tokentaby/devs.json`);
@@ -312,12 +312,12 @@ hooks/collect.js  (Node, no dependencies, always exits 0, async where possible)
   │ sums usage per model, prices each request
   ▼
 .git/tokentaby/spool.ndjson   (clone-local queue)
-  │ pre-commit (ride-along) │ session end (auto-commit) │ /tt sync (manual)
+  │ pre-commit (ride-along) │ session end (auto-commit) │ /tokentaby:sync (manual)
   ▼
 .tokentaby/devs/<dev>/<YYYY-MM>.ndjson   (committed, append-only, merge=union)
   │ git push / pull → every clone has the whole team
   ▼
-tokentaby serve → http://localhost:7331   ·   /tt   ·   the tokentaby skill
+/tokentaby:dashboard → http://localhost:7331   ·   /tokentaby:usage   ·   the tokentaby skill
 ```
 
 Each event is one JSON line:
@@ -345,11 +345,11 @@ Details that keep the numbers right:
 
 | Symptom | Check |
 |---|---|
-| Nothing is logged | Have you chosen a `dev_id` (`/plugin` → tokentaby)? Is `.tokentaby/` committed in this repo? Is `node` on your `PATH`? Run `/tt status`. |
-| Usage never reaches git | `/tt status` shows `pre_commit_hook`. With husky or another `core.hooksPath`, re-run `/tt init --hook-in-tracked-dir` or add the block yourself. Or switch to `auto-commit`. |
+| Nothing is logged | Have you chosen a `dev_id` (`/plugin` → tokentaby)? Is `.tokentaby/` committed in this repo? Is `node` on your `PATH`? Run `/tokentaby:status`. |
+| Usage never reaches git | `/tokentaby:status` shows `pre_commit_hook`. With husky or another `core.hooksPath`, re-run `/tokentaby:init --hook-in-tracked-dir` or add the block yourself. Or switch to `auto-commit`. |
 | A teammate is missing | `git pull`. Their usage arrives with their commits. |
 | Commit refused for a secret | Edit the named line (replace the value with `[REDACTED]`), re-stage and commit. |
-| Debugging hooks | Start Claude Code with `TOKENTABY_DEBUG=1`. Payloads and errors go to `debug.ndjson` in the plugin data dir (`/tt status` shows it). |
+| Debugging hooks | Start Claude Code with `TOKENTABY_DEBUG=1`. Payloads and errors go to `debug.ndjson` in the plugin data dir (`/tokentaby:status` shows it). |
 
 ---
 
@@ -371,7 +371,8 @@ lib/                   transcript-adapter, pricing, store, git, sync, aggregate,
                        secrets, tasks, config
 bin/tokentaby          CLI
 dashboard/index.html   single-file UI
-commands/tt.md         /tt
+commands/              /tokentaby:usage, init, backfill, task, dashboard, snapshot,
+                       sync, status
 skills/tokentaby/      lets Claude answer usage questions
 templates/             pricing table, repo README, CI workflow, team settings
 test/                  unit + end-to-end tests with transcript fixtures

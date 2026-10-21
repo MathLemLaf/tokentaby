@@ -1,6 +1,6 @@
 {
   "name": "tokentaby",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Claude Code plugin: per-repo, per-developer usage tracking with estimated cost, committed to git, and a local team dashboard.",
   "private": true,
   "license": "MIT",

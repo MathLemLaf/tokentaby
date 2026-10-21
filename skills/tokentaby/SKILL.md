@@ -37,5 +37,5 @@ Examples:
 - Always call costs **estimated (API-equivalent)**. The team is on Claude subscriptions; these are list-price estimates for comparison and budgeting, not a bill.
 - Tokens come in four kinds: input, output, cache write and cache read. Cache reads dominate raw token counts, so lead with estimated cost, and mention the token mix only when it matters.
 - Usage not yet committed sits in this clone's queue, so only this developer's newest turns are visible before they commit. Teammates' usage arrives with `git pull`.
-- If the CLI says tokentaby is not set up, tell the user to run `/tt init` and commit `.tokentaby/`.
+- If the CLI says tokentaby is not set up, tell the user to run `/tokentaby:init` (then `/tokentaby:backfill` for their history) and commit `.tokentaby/`.
 - Never print raw prompt text beyond what the user asked for. In `hash_only` mode no text exists; say so instead of guessing.

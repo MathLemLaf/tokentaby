@@ -1,6 +1,6 @@
 {
   "name": "tokentaby",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Per-repo, per-developer Claude Code usage tracking — tokens, models, agents, tasks, prompts and estimated (API-equivalent) cost — committed to git, with a local team dashboard.",
   "author": {
     "name": "mdsami"
@@ -26,14 +26,14 @@
     "sync": {
       "type": "string",
       "title": "Git sync mode",
-      "description": "team (use the repo's setting), ride-along (usage ships inside your normal commits), auto-commit (a usage-only commit at session end, never pushed), manual (/tt sync).",
+      "description": "team (use the repo's setting), ride-along (usage ships inside your normal commits), auto-commit (a usage-only commit at session end, never pushed), manual (/tokentaby:sync).",
       "options": ["team", "ride-along", "auto-commit", "manual"],
       "default": "team"
     },
     "port": {
       "type": "number",
       "title": "Dashboard port",
-      "description": "Local port for the dashboard (tokentaby serve / /tt serve).",
+      "description": "Local port for the dashboard (/tokentaby:dashboard).",
       "default": 7331,
       "min": 1024,
       "max": 65535
@@ -41,7 +41,7 @@
     "currency": {
       "type": "string",
       "title": "Display currency",
-      "description": "Currency for estimated costs in the dashboard and /tt — the ones Claude bills in: USD, INR or EUR. Rates come from the fx table in .tokentaby/pricing.json.",
+      "description": "Currency for estimated costs in the dashboard and /tokentaby:usage — the ones Claude bills in: USD, INR or EUR. Rates come from the fx table in .tokentaby/pricing.json.",
       "options": ["USD", "INR", "EUR"],
       "default": "USD"
     }

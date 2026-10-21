@@ -8,7 +8,7 @@ This folder is written by the [tokentaby](https://github.com/mdsami/tokentaby) C
 |---|---|
 | `turn` (each Claude reply, per model) | time, dev id, session id, agent (`main` or a subagent id and type), model, input / output / cache-write / cache-read tokens, request count, estimated cost, task, branch, duration, effort |
 | `prompt` | time, dev id, session id, task, a hash and the length of the prompt, and — depending on the prompt mode — its text |
-| `task` | task set with `/tt task`, or created/completed by Claude Code's task list |
+| `task` | task set with `/tokentaby:task`, or created/completed by Claude Code's task list |
 | `session` | start / end, model switches |
 
 **Never logged:** file contents, tool output, code diffs, command output.
@@ -38,8 +38,8 @@ Each developer only ever writes `devs/<their id>/`. Until usage is committed, ne
 
 ## Viewing
 
-- `/tt` in Claude Code: today, this week and this month, you vs the team
-- `/tt serve` or `tokentaby serve`: the dashboard at http://localhost:7331
+- `/tokentaby:usage` in Claude Code: today, this week and this month, you vs the team
+- `/tokentaby:dashboard`: the dashboard at http://localhost:7331
 - Ask Claude, for example "what did TKT-142 cost?"
 
 Run `git pull` to get teammates' latest usage.

@@ -105,7 +105,7 @@ test('a session is collected into the clone-local spool', () => {
   assert.match(JSON.parse(start.stdout).systemMessage, /usage in this repo is logged/);
   assert.equal(hook({ hook_event_name: 'SessionStart', source: 'compact' }).stdout, '', 'the notice is shown once');
 
-  hook({ hook_event_name: 'UserPromptSubmit', prompt: '/tt task TKT-9' });
+  hook({ hook_event_name: 'UserPromptSubmit', prompt: '/tokentaby:task TKT-9' });
   hook({ hook_event_name: 'UserPromptSubmit', prompt: `deploy with key ${fake.aws} please` });
   hook({ hook_event_name: 'Stop', stop_hook_active: false });
   hook({ hook_event_name: 'Stop', stop_hook_active: false }); // idempotent

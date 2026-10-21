@@ -214,7 +214,7 @@ function onSessionStart(ctx) {
       JSON.stringify({
         systemMessage:
           `tokentaby: Claude Code usage in this repo is logged to .tokentaby/devs/${dev}/ ` +
-          `(prompts: ${ctx.cfg.prompt_mode}, sync: ${ctx.cfg.sync}). See .tokentaby/README.md. Run /tt for a summary.`,
+          `(prompts: ${ctx.cfg.prompt_mode}, sync: ${ctx.cfg.sync}). See .tokentaby/README.md. Run /tokentaby:usage for a summary.`,
       }) + '\n'
     );
   }

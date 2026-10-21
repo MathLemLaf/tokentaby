@@ -52,7 +52,7 @@ Usage: tokentaby <command> [options]
                               write the dashboard as one offline HTML file
   precommit                   git pre-commit hook entry (installed by init)
 
-Options:  --repo PATH  --json  --data-dir DIR (plugin data folder; set by /tt)
+Options:  --repo PATH  --json  --data-dir DIR (plugin data folder; the slash commands pass it)
 Filters:  --from YYYY-MM-DD --to YYYY-MM-DD --dev ID --model ID --task ID
           --agent TYPE --branch NAME --q TEXT --prices current
 Modes:    --sync ${SYNC_MODES.join('|')}   --prompt-mode ${PROMPT_MODES.join('|')}
@@ -97,7 +97,7 @@ function needRepo(a, { initialized = true } = {}) {
   const repo = git.findRepo(typeof a.repo === 'string' ? a.repo : process.cwd());
   if (!repo) throw new UsageError('not inside a git repository');
   if (initialized && !store.isInitialized(repo.root)) {
-    throw new UsageError(`tokentaby is not set up in ${repo.root}\nRun: tokentaby init   (or /tt init inside Claude Code)`);
+    throw new UsageError(`tokentaby is not set up in ${repo.root}\nRun /tokentaby:init in Claude Code (or tokentaby init in a terminal)`);
   }
   // share the hooks' watermarks: explicit flag, else the folder SessionStart recorded
   if (typeof a.dataDir === 'string' && a.dataDir) store.setDataDir(a.dataDir);
@@ -173,7 +173,7 @@ const commands = {
       '',
       `Top model this month: ${p.month.topModel || '—'}` + (topTask ? `   Top task: ${topTask.task} (${money(topTask.usd)})` : ''),
       `Queued, not yet committed: ${queuedCount(repo)} events · sync: ${cfg.sync} · prompts: ${cfg.prompt_mode}`,
-      p.me ? 'Dashboard: tokentaby serve  (or /tt serve)' : 'Your own usage is not logged until you choose a developer id: set dev_id in /plugin → tokentaby.',
+      p.me ? 'Dashboard: /tokentaby:dashboard  (or tokentaby serve in a terminal)' : 'Your own usage is not logged until you choose a developer id: set dev_id in /plugin → tokentaby.',
     ];
     process.stdout.write(lines.join('\n') + '\n');
   },
@@ -254,7 +254,7 @@ const commands = {
       `  git hook: ${hookMsg}`,
       dev ? `  your usage is logged as "${dev}" (the dev_id you chose)` : '  you have not chosen a developer id yet: set dev_id in /plugin → tokentaby to start logging',
       '',
-      'Import your past sessions in this repo: tokentaby backfill   (or /tt backfill)',
+      'Import your past sessions in this repo: /tokentaby:backfill',
       'Next: commit .tokentaby/ so the whole team starts tracking:',
       '  git add .tokentaby' + (a.ci ? ' .github/workflows/tokentaby.yml' : '') + ' && git commit -m "chore: add tokentaby usage tracking"',
     ];
@@ -406,13 +406,14 @@ const commands = {
       `${a.dryRun ? 'Would import' : 'Imported'} ${r.imported} of ${r.sessions} sessions from ${r.dir}` +
         (a.dryRun ? '' : ` (${r.turnRows} turn rows, ${r.prompts} prompts)`) +
         `.\n${r.alreadyTracked} already tracked${r.skipped ? `, ${r.skipped} older than --since` : ''}.` +
-        (a.dryRun ? '' : '\nThe events are queued; they ship with your next commit (or /tt sync). Run tokentaby summary to see them.')
+        (a.dryRun ? '' : '\nThe events are queued; they ship with your next commit (or /tokentaby:sync). Run tokentaby summary to see them.')
     );
   },
 
   snapshot(a) {
     const repo = needRepo(a);
-    const out = typeof a.out === 'string' ? a.out : path.join(repo.root, `tokentaby-${path.basename(repo.root)}-${new Date().toISOString().slice(0, 10)}.html`);
+    // default outside the repo: a snapshot holds logged prompts and must not be committed by accident
+    const out = typeof a.out === 'string' ? a.out : path.join(require('os').tmpdir(), `tokentaby-${path.basename(repo.root)}-${new Date().toISOString().slice(0, 10)}.html`);
     const snap = buildSnapshot(repo, { noPrompts: !!a.noPrompts });
     fs.writeFileSync(out, snap.html);
     print(`Wrote ${out} (${snap.events} events, ${(snap.html.length / 1024).toFixed(0)} KB). Open it in any browser; no server needed.` + (a.noPrompts ? '\nPrompt text removed (hashes only).' : '\nIt contains the logged prompts: share it like the repo itself, or use --no-prompts.'));
@@ -422,15 +423,6 @@ const commands = {
     process.exitCode = sync.precommit(process.cwd());
   },
 
-  /** Dispatcher behind the /tt slash command: friendlier defaults for in-session use. */
-  async tt(a) {
-    const sub = a._[1];
-    const rest = { ...a, _: a._.slice(1) };
-    if (!sub) return commands.summary(rest);
-    if (sub === 'serve' || sub === 'dashboard') return commands.serve({ ...rest, detach: !rest.stop });
-    if (!commands[sub] || sub === 'tt') throw new UsageError(`unknown /tt command "${sub}". Try: /tt, /tt init, /tt backfill, /tt task <ID>, /tt serve, /tt snapshot, /tt sync, /tt status`);
-    return commands[sub](rest);
-  },
 };
 
 // ---------------------------------------------------------------- helpers

@@ -591,7 +591,7 @@ tbody tr:hover { background: var(--hover); }
   function emptyState() {
     return h('div', { class: 'card empty' }, h('h2', { text: 'No usage logged yet' }),
       h('p', {}, 'Data appears after the first Claude Code turn in this repo. Teammates\' usage arrives with ', h('span', { class: 'mono', text: 'git pull' }), '.'),
-      h('p', { class: 'muted' }, 'Not set up? Run ', h('span', { class: 'mono', text: '/tt init' }), ' in Claude Code, then commit ', h('span', { class: 'mono', text: '.tokentaby/' }), '.'));
+      h('p', { class: 'muted' }, 'Not set up? Run ', h('span', { class: 'mono', text: '/tokentaby:init' }), ' in Claude Code, then commit ', h('span', { class: 'mono', text: '.tokentaby/' }), '.'));
   }
 
   const devLink = (id) => '#/devs/' + encodeURIComponent(id);
@@ -642,7 +642,7 @@ tbody tr:hover { background: var(--hover); }
         }),
         chartCard({
           title: 'Top tasks', hint: 'by estimated cost',
-          draw: (host) => barList(host, { items: sum.topTasks.map((x) => ({ label: x.task, v: x.usd })), empty: 'No task-attributed usage yet. Name branches like feat/TKT-142-… or run /tt task TKT-142.' }),
+          draw: (host) => barList(host, { items: sum.topTasks.map((x) => ({ label: x.task, v: x.usd })), empty: 'No task-attributed usage yet. Name branches like feat/TKT-142-… or run /tokentaby:task TKT-142.' }),
           table: () => dataTable({ columns: [{ key: 'task', label: 'Task' }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }], rows: sum.topTasks }),
         }));
       mount([tiles, unpriced, cards]);
@@ -773,7 +773,7 @@ tbody tr:hover { background: var(--hover); }
           draw: (host) => barList(host, { items: cheapest.map((x) => ({ label: x.task, v: x.usd, extra: `${fmt.int(x.prompts)} prompts` })), empty: 'No task-attributed usage yet.' }),
           table: () => taskTable(cheapest),
         }),
-        h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Tasks' }), h('div', { class: 'hint', text: 'Explicit /tt task → ticket id in the branch name → Claude Code task subject.' }))), taskTable(tasks)),
+        h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Tasks' }), h('div', { class: 'hint', text: 'Explicit /tokentaby:task → ticket id in the branch name → Claude Code task subject.' }))), taskTable(tasks)),
         h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Branches' }), h('div', { class: 'hint', text: 'A branch is usually a PR.' }))),
           dataTable({ columns: [{ key: 'branch', label: 'Branch' }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }, { key: 'req', label: 'Requests', num: true, fmt: (r) => fmt.int(r.req) }, { key: 'durMs', label: 'Active time', num: true, fmt: (r) => fmt.dur(r.durMs) }], rows: branches }))),
       ]);

@@ -99,8 +99,9 @@ test('schema validation catches bad lines and foreign dev dirs', () => {
 test('task resolution order', () => {
   assert.equal(ticketFromBranch('feat/TKT-142-retry'), 'TKT-142');
   assert.equal(ticketFromBranch('release-2026'), null);
-  assert.equal(parseTaskCommand('/tt task TKT-9'), 'TKT-9');
-  assert.equal(parseTaskCommand('/tokentaby:tt task none'), null);
+  assert.equal(parseTaskCommand('/tokentaby:task TKT-9'), 'TKT-9');
+  assert.equal(parseTaskCommand('/tokentaby:task none'), null);
+  assert.equal(parseTaskCommand('/tt task TKT-9'), undefined, 'plugin commands always carry the plugin prefix');
   assert.equal(parseTaskCommand('please add a task list'), undefined);
   assert.equal(resolveTask({ session: { task: 'X-1' }, branch: 'feat/TKT-2' }), 'X-1');
   assert.equal(resolveTask({ clone: { id: 'C-1', branch: 'feat/TKT-2' }, branch: 'feat/TKT-2' }), 'C-1');

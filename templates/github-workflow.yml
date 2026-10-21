@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: mdsami/tokentaby
-          ref: tokentaby--v0.1.0 # release tag made by `claude plugin tag`; pin the version your team runs
+          ref: tokentaby--v0.1.1 # release tag made by `claude plugin tag`; pin the version your team runs
           path: .tokentaby-plugin
           # private plugin repo: give this checkout read access (the `token` input of actions/checkout)
 
