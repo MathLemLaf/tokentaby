@@ -171,7 +171,7 @@ const commands = {
     lines.push(
       '',
       'Or just ask: "what did TKT-142 cost?", "who used the most Opus this week?" — Claude answers from the logs.',
-      `Terminal (query, export, rollup, validate, ingest-otel): node "${path.join(ROOT, 'bin', 'tokentaby')}" help`,
+      `Terminal (query, export, rollup, validate, ingest-otel): node "${path.join(ROOT, 'scripts', 'tokentaby.js')}" help`,
       'Costs are estimated API-equivalent prices for subscription usage, not a bill.'
     );
     print(lines.join('\n'));

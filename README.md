@@ -56,7 +56,7 @@ Pin the plugin in the repo so all developers run the same version and schema. Co
 {
   "extraKnownMarketplaces": {
     "tokentaby": {
-      "source": { "source": "github", "repo": "mdsami/tokentaby", "ref": "tokentaby--v0.1.2" }
+      "source": { "source": "github", "repo": "mdsami/tokentaby", "ref": "tokentaby--v0.1.3" }
     }
   },
   "enabledPlugins": {
@@ -101,7 +101,7 @@ Repos without `.tokentaby/` are never touched, because collection is opt-in per 
 
 **Import your history:** `/tokentaby:backfill` reads this repo's past sessions from `~/.claude/projects/` and splits them into per-turn rows, so the dashboard has data from day one. It shares the live hooks' watermarks, so a session is never counted twice, and running it again imports nothing new. Each developer runs it once for their own history.
 
-Options (`/tokentaby:init …`, or `node <plugin>/bin/tokentaby init …` in a terminal):
+Options (`/tokentaby:init …`, or `node <plugin>/scripts/tokentaby.js init …` in a terminal):
 
 | Option | Effect |
 |---|---|
@@ -155,14 +155,14 @@ Queued, not yet committed: 12 events · sync: ride-along · prompts: truncated
 
 ```bash
 /tokentaby:dashboard            # inside Claude Code (runs in the background)
-node <plugin>/bin/tokentaby serve [--port 7331] [--no-open]
-node <plugin>/bin/tokentaby serve --stop
+node <plugin>/scripts/tokentaby.js serve [--port 7331] [--no-open]
+node <plugin>/scripts/tokentaby.js serve --stop
 ```
 
 A single-file local web app with no build step and no CDN, so it works offline. It binds to `127.0.0.1` only.
 
 > **Claude Code sandbox on?** A sandboxed Bash can't open local ports, so `/tokentaby:dashboard` reports `not allowed to open port`. Start the dashboard from the prompt with `!`, which runs the command in your own shell:
-> `! node <plugin>/bin/tokentaby serve --detach && open http://localhost:7331`
+> `! node <plugin>/scripts/tokentaby.js serve --detach && open http://localhost:7331`
 > Alternatively, allow it with `"sandbox": { "network": { "allowLocalBinding": true } }` in your settings.
 
 **Offline snapshot:** `tokentaby snapshot [--out FILE] [--no-prompts]` writes the whole dashboard, data included, as one HTML file that opens from disk with no server. It stays interactive: filters, tables and CSV export all work. Use `--no-prompts` before sharing it outside the team.
@@ -255,7 +255,7 @@ The first session in a tracked repo shows a one-time notice of what is logged. T
 Run the same checks locally:
 
 ```bash
-node <plugin>/bin/tokentaby validate --base origin/main
+node <plugin>/scripts/tokentaby.js validate --base origin/main
 ```
 
 ---
@@ -278,7 +278,7 @@ Optional, for teams that already export Claude Code OpenTelemetry. It imports `c
 
 ## CLI reference
 
-The CLI ships inside the plugin. Run it as `node <plugin-dir>/bin/tokentaby <command>`.
+The CLI ships inside the plugin. Run it as `node <plugin-dir>/scripts/tokentaby.js <command>`.
 
 ```
 summary                     today / week / month, you vs team (default)
@@ -370,7 +370,7 @@ hooks/                 hooks.json (exec-form, no shell), collect.js (single entr
 lib/                   transcript-adapter, pricing, store, git, sync, aggregate,
                        server, api, snapshot, backfill, validate, rollup, otel,
                        secrets, tasks, config
-bin/tokentaby          CLI
+scripts/tokentaby.js   CLI (a readable Node script; run it with node)
 dashboard/index.html   single-file UI
 commands/              /tokentaby:usage, init, backfill, task, dashboard, snapshot,
                        sync, status, help

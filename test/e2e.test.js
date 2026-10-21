@@ -13,7 +13,7 @@ const fake = require('./fake-secrets');
 
 const ROOT = path.resolve(__dirname, '..');
 const COLLECT = path.join(ROOT, 'hooks', 'collect.js');
-const CLI = path.join(ROOT, 'bin', 'tokentaby');
+const CLI = path.join(ROOT, 'scripts', 'tokentaby.js');
 const FIX = path.join(__dirname, 'fixtures');
 const SESSION = 'sess-0001';
 
@@ -297,6 +297,17 @@ test('snapshot is a self-contained dashboard whose in-page API answers every vie
     assert.ok(data.events.filter((e) => e.t === 'prompt').every((e) => e.text === undefined));
     assert.equal(data.meta.promptMode, 'hash_only');
   });
+});
+
+test('SessionStart upgrades a pre-commit block written by an older version', () => {
+  const hookFile = path.join(repo, '.git', 'hooks', 'pre-commit');
+  const current = fs.readFileSync(hookFile, 'utf8');
+  // the 0.1.0–0.1.2 block called the CLI in bin/
+  const old = current.replace(/tt_cli=.*\n/, '').replace(/\$tt_cli/g, '$tt_root/bin/tokentaby');
+  assert.notEqual(old, current);
+  fs.writeFileSync(hookFile, old);
+  hook({ hook_event_name: 'SessionStart', source: 'resume' });
+  assert.equal(fs.readFileSync(hookFile, 'utf8'), current);
 });
 
 test('/tokentaby:help lists every slash command the plugin ships', () => {

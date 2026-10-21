@@ -1,6 +1,6 @@
 {
   "name": "tokentaby",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Per-repo, per-developer Claude Code usage tracking — tokens, models, agents, tasks, prompts and estimated (API-equivalent) cost — committed to git, with a local team dashboard.",
   "author": {
     "name": "mdsami"

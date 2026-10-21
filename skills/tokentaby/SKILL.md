@@ -1,7 +1,7 @@
 ---
 name: tokentaby
 description: Answer questions about this repo's Claude Code usage and estimated cost from tokentaby's logs — e.g. "what did TKT-142 cost?", "who used the most Opus this week?", "how much do subagents add?", "which tasks were cheapest?", "what has the team been asking Claude?".
-allowed-tools: Bash(node "${CLAUDE_PLUGIN_ROOT}/bin/tokentaby" query:*)
+allowed-tools: Bash(node "${CLAUDE_PLUGIN_ROOT}/scripts/tokentaby.js" query:*)
 ---
 
 # Usage analysis with tokentaby
@@ -9,7 +9,7 @@ allowed-tools: Bash(node "${CLAUDE_PLUGIN_ROOT}/bin/tokentaby" query:*)
 tokentaby logs every Claude Code turn in this repo (tokens, model, agent, task, branch, estimated cost) to `.tokentaby/devs/<dev>/<YYYY-MM>.ndjson`, committed to git, so a pulled clone holds the whole team's usage. Query it with the bundled CLI — it prints JSON:
 
 ```
-node "${CLAUDE_PLUGIN_ROOT}/bin/tokentaby" query <view> [filters]
+node "${CLAUDE_PLUGIN_ROOT}/scripts/tokentaby.js" query <view> [filters]
 ```
 
 | view | answers |

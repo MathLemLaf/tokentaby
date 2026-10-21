@@ -186,10 +186,8 @@ function onSessionStart(ctx) {
   // identity + plugin location for the git hook and the CLI (they run outside Claude)
   const dev = ctx.dev;
   const state = store.writeState(repo, { dev, plugin_root: PLUGIN_ROOT, version: pluginVersion(), options: userOptions(), data_dir: store.dataDir(), last_session: ctx.now });
-  if (!git.hasPreCommit(repo)) {
-    const r = git.installPreCommit(repo);
-    debug('hook-install', r);
-  }
+  // install the git hook, or refresh a block an older plugin version wrote (no-op when current)
+  debug('hook', git.installPreCommit(repo));
   const cwdRel = path.relative(repo.root, p.cwd || repo.root).split(path.sep).join('/') || '.';
   store.appendEvents(repo, [
     {
