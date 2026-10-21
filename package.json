@@ -1,0 +1,18 @@
+{
+  "name": "tokentaby",
+  "version": "0.1.0",
+  "description": "Claude Code plugin: per-repo, per-developer usage tracking with estimated cost, committed to git, and a local team dashboard.",
+  "private": true,
+  "license": "MIT",
+  "bin": {
+    "tokentaby": "bin/tokentaby"
+  },
+  "scripts": {
+    "test": "node --test",
+    "validate-plugin": "claude plugin validate ."
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": "github:mdsami/tokentaby"
+}

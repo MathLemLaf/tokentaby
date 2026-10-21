@@ -1,0 +1,49 @@
+{
+  "name": "tokentaby",
+  "version": "0.1.0",
+  "description": "Per-repo, per-developer Claude Code usage tracking — tokens, models, agents, tasks, prompts and estimated (API-equivalent) cost — committed to git, with a local team dashboard.",
+  "author": {
+    "name": "mdsami"
+  },
+  "homepage": "https://github.com/mdsami/tokentaby",
+  "repository": "https://github.com/mdsami/tokentaby",
+  "license": "MIT",
+  "keywords": ["usage", "tokens", "cost", "analytics", "team", "dashboard"],
+  "userConfig": {
+    "dev_id": {
+      "type": "string",
+      "title": "Developer id",
+      "description": "Your id in .tokentaby/devs/<id>/. Leave empty to use the local part of your git user.email.",
+      "default": ""
+    },
+    "prompt_mode": {
+      "type": "string",
+      "title": "Prompt logging",
+      "description": "How much prompt text to log: team (use the repo's policy), truncated (first 200 chars), hash_only (no text), full. The repo's policy is a floor: you can be more private, never less.",
+      "options": ["team", "truncated", "hash_only", "full"],
+      "default": "team"
+    },
+    "sync": {
+      "type": "string",
+      "title": "Git sync mode",
+      "description": "team (use the repo's setting), ride-along (usage ships inside your normal commits), auto-commit (a usage-only commit at session end, never pushed), manual (/tt sync).",
+      "options": ["team", "ride-along", "auto-commit", "manual"],
+      "default": "team"
+    },
+    "port": {
+      "type": "number",
+      "title": "Dashboard port",
+      "description": "Local port for the dashboard (tokentaby serve / /tt serve).",
+      "default": 7331,
+      "min": 1024,
+      "max": 65535
+    },
+    "currency": {
+      "type": "string",
+      "title": "Display currency",
+      "description": "Currency for estimated costs in the dashboard and /tt — the ones Claude bills in: USD, INR or EUR. Rates come from the fx table in .tokentaby/pricing.json.",
+      "options": ["USD", "INR", "EUR"],
+      "default": "USD"
+    }
+  }
+}

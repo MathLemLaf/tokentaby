@@ -1,0 +1,9 @@
+# Internal planning doc — never commit or push
+PLAN.md
+
+node_modules/
+.DS_Store
+*.log
+
+# Claude Code local session state
+.claude/

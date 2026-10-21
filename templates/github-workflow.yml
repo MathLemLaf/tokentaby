@@ -1,0 +1,36 @@
+# tokentaby CI guard: checks every usage log line against the schema, rejects
+# pull requests that add lines to another developer's log, and scans logged
+# prompts for credentials.
+name: tokentaby
+
+on:
+  pull_request:
+    paths:
+      - ".tokentaby/**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check out the tokentaby validator
+        uses: actions/checkout@v4
+        with:
+          repository: mdsami/tokentaby
+          ref: tokentaby--v0.1.0 # release tag made by `claude plugin tag`; pin the version your team runs
+          path: .tokentaby-plugin
+          # private plugin repo? add a read-only token:
+          # token: ${{ secrets.TOKENTABY_REPO_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate usage logs
+        run: node .tokentaby-plugin/bin/tokentaby validate --base "origin/${{ github.base_ref }}"

@@ -1,0 +1,17 @@
+{
+  "name": "tokentaby",
+  "owner": {
+    "name": "mdsami"
+  },
+  "description": "tokentaby: Claude Code usage tracking per repo and developer.",
+  "plugins": [
+    {
+      "name": "tokentaby",
+      "source": "./",
+      "description": "Per-repo, per-developer Claude Code usage tracking — tokens, models, agents, tasks, prompts and estimated (API-equivalent) cost — committed to git, with a local team dashboard.",
+      "version": "0.1.0",
+      "category": "productivity",
+      "tags": ["usage", "cost", "analytics", "team"]
+    }
+  ]
+}

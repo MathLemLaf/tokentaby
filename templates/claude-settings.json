@@ -1,0 +1,10 @@
+{
+  "extraKnownMarketplaces": {
+    "tokentaby": {
+      "source": { "source": "github", "repo": "mdsami/tokentaby", "ref": "tokentaby--v0.1.0" }
+    }
+  },
+  "enabledPlugins": {
+    "tokentaby@tokentaby": true
+  }
+}
