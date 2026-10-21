@@ -158,10 +158,11 @@ const commands = {
     if (a.json) return print(p);
     const fx = loadPricing(repo.root).fx;
     const money = (v) => fmtMoney(v, cfg, fx);
-    const rows = [['', `you (${p.me})`, 'est. cost', 'prompts', 'team tokens', 'est. cost', 'prompts', 'sessions', 'devs']];
+    const rows = [['', p.me ? `you (${p.me})` : 'you', 'est. cost', 'prompts', 'team tokens', 'est. cost', 'prompts', 'sessions', 'devs']];
     for (const [label, k] of [['today', 'today'], ['this week', 'week'], ['this month', 'month']]) {
       const x = p[k];
-      rows.push([label, fmtTokens(x.me.tokens), money(x.me.usd), x.me.prompts, fmtTokens(x.team.tokens), money(x.team.usd), x.team.prompts, x.team.sessions, x.team.devs]);
+      const mine = x.me ? [fmtTokens(x.me.tokens), money(x.me.usd), x.me.prompts] : ['—', '—', '—'];
+      rows.push([label, ...mine, fmtTokens(x.team.tokens), money(x.team.usd), x.team.prompts, x.team.sessions, x.team.devs]);
     }
     const s = ds.summary({ ...filters(a) });
     const topTask = s.topTasks[0];
@@ -172,7 +173,7 @@ const commands = {
       '',
       `Top model this month: ${p.month.topModel || '—'}` + (topTask ? `   Top task: ${topTask.task} (${money(topTask.usd)})` : ''),
       `Queued, not yet committed: ${queuedCount(repo)} events · sync: ${cfg.sync} · prompts: ${cfg.prompt_mode}`,
-      'Dashboard: tokentaby serve  (or /tt serve)',
+      p.me ? 'Dashboard: tokentaby serve  (or /tt serve)' : 'Your own usage is not logged until you choose a developer id: set dev_id in /plugin → tokentaby.',
     ];
     process.stdout.write(lines.join('\n') + '\n');
   },
@@ -236,8 +237,9 @@ const commands = {
     if (a.sync && !SYNC_MODES.includes(a.sync)) throw new UsageError(`--sync must be one of ${SYNC_MODES.join(', ')}`);
     if (a.promptMode && !PROMPT_MODES.includes(a.promptMode)) throw new UsageError(`--prompt-mode must be one of ${PROMPT_MODES.join(', ')}`);
     const res = sync.init(repo, { sync: a.sync, promptMode: a.promptMode, ci: !!a.ci, allowTrackedHook: !!a.hookInTrackedDir });
-    const dev = store.resolveDevId(repo.root, process.env.CLAUDE_PLUGIN_OPTION_DEV_ID || process.env.TOKENTABY_DEV_ID);
-    store.writeState(repo, { dev, plugin_root: ROOT, version: VERSION });
+    const state = store.readState(repo);
+    const dev = store.devIdFor(resolveConfig(repo.root, state.options), state);
+    store.writeState(repo, { ...(dev ? { dev } : {}), plugin_root: ROOT, version: VERSION });
     if (a.json) return print(res);
     const hookMsg = {
       created: `installed ${path.relative(repo.root, res.hook.file)}`,
@@ -250,7 +252,7 @@ const commands = {
       `tokentaby set up in ${repo.root}`,
       res.created.length ? res.created.map((f) => `  + ${f}`).join('\n') : '  (all files already existed)',
       `  git hook: ${hookMsg}`,
-      `  you are logged as dev "${dev}" (override with the plugin's dev_id option)`,
+      dev ? `  your usage is logged as "${dev}" (the dev_id you chose)` : '  you have not chosen a developer id yet: set dev_id in /plugin → tokentaby to start logging',
       '',
       'Import your past sessions in this repo: tokentaby backfill   (or /tt backfill)',
       'Next: commit .tokentaby/ so the whole team starts tracking:',
@@ -289,7 +291,7 @@ const commands = {
     const info = {
       repo: repo.root,
       initialized,
-      dev: cfg.dev_id ? store.sanitizeDev(cfg.dev_id) : state.dev || store.resolveDevId(repo.root),
+      dev: store.devIdFor(cfg, state),
       prompt_mode: cfg.prompt_mode,
       sync: cfg.sync,
       queued_events: queuedCount(repo),
@@ -380,6 +382,7 @@ const commands = {
     if (!file) throw new UsageError('usage: tokentaby ingest-otel <otlp-export.json> [--dev ID] [--all-sessions] [--dry-run]');
     const { ds } = dataset(repo);
     const dev = typeof a.dev === 'string' ? store.sanitizeDev(a.dev) : ds.me;
+    if (!dev) throw new UsageError('no developer id: pass --dev ID or set dev_id in /plugin → tokentaby');
     const r = otel.ingest(repo, file, { dev, allSessions: !!a.allSessions, dryRun: !!a.dryRun });
     if (a.json) return print(r);
     print(

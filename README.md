@@ -44,6 +44,8 @@ claude plugin install tokentaby@tokentaby
 /plugin install tokentaby@tokentaby
 ```
 
+The install asks for your **developer id** (`dev_id`): the name your usage is logged under, visible to your team. Use the part of your work email before the @, so the CI check can match your commits. To skip the prompt, pass `--config dev_id=sami`. tokentaby never reads your git identity or OS account, and it logs nothing until you choose an id.
+
 Restart Claude Code, or run `/reload-plugins`. That's all the per-developer setup. Each repo opts in once with `/tt init` (next section).
 
 ### Roll it out to a team, pinned to one version
@@ -66,7 +68,7 @@ Pin the plugin in the repo so all developers run the same version and schema. Co
 Each developer then runs this once:
 
 ```bash
-claude plugin install tokentaby@tokentaby --scope project
+claude plugin install tokentaby@tokentaby --scope project --config dev_id=<your-id>
 ```
 
 To upgrade the team, change `ref` to the new release tag and commit.
@@ -190,7 +192,7 @@ Set these in `/plugin` → tokentaby, or from the terminal with `claude plugin c
 
 | Option | Default | Meaning |
 |---|---|---|
-| `dev_id` | *(git email local part)* | your id in `.tokentaby/devs/<id>/` |
+| `dev_id` | *(required, asked at install)* | the name your usage is logged under in `.tokentaby/devs/<id>/`. Nothing is logged until it's set |
 | `prompt_mode` | `team` | `team` (use the repo policy), `truncated`, `hash_only` or `full`. You can be **more** private than the team, never less |
 | `sync` | `team` | `team`, `ride-along`, `auto-commit` or `manual` |
 | `port` | `7331` | dashboard port |
@@ -230,7 +232,7 @@ Each developer writes only their own `devs/<id>/` files, and `merge=union` resol
 
 | Logged | Never logged |
 |---|---|
-| timestamps, dev id, session id, model, agent, token counts, estimated cost, task, branch, duration, effort | file contents, tool output, code diffs, command output |
+| timestamps, dev id (the one you chose), session id, model, agent, token counts, estimated cost, task, branch, duration, effort | file contents, tool output, code diffs, command output, your git identity or OS account |
 | prompts: hash + length, plus text per `prompt_mode` | |
 
 - `truncated` (default): the first 200 characters, with obvious secrets (API keys, GitHub/Slack/AWS tokens, JWTs, private keys, `password=…`) replaced by `[REDACTED]` **before** anything is written.
@@ -343,7 +345,7 @@ Details that keep the numbers right:
 
 | Symptom | Check |
 |---|---|
-| Nothing is logged | Is `.tokentaby/` committed in this repo? Is `node` on your `PATH`? Run `/tt status`. |
+| Nothing is logged | Have you chosen a `dev_id` (`/plugin` → tokentaby)? Is `.tokentaby/` committed in this repo? Is `node` on your `PATH`? Run `/tt status`. |
 | Usage never reaches git | `/tt status` shows `pre_commit_hook`. With husky or another `core.hooksPath`, re-run `/tt init --hook-in-tracked-dir` or add the block yourself. Or switch to `auto-commit`. |
 | A teammate is missing | `git pull`. Their usage arrives with their commits. |
 | Commit refused for a secret | Edit the named line (replace the value with `[REDACTED]`), re-stage and commit. |

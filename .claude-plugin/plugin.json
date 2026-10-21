@@ -13,8 +13,8 @@
     "dev_id": {
       "type": "string",
       "title": "Developer id",
-      "description": "Your id in .tokentaby/devs/<id>/. Leave empty to use the local part of your git user.email.",
-      "default": ""
+      "description": "The name your usage is logged under (.tokentaby/devs/<id>/), visible to your team. Nothing is logged until you set it. Using the part of your work email before @ lets the CI check match your commits.",
+      "required": true
     },
     "prompt_mode": {
       "type": "string",

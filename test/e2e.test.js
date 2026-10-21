@@ -29,6 +29,8 @@ const env = {
   HOME: tmp, // keep the developer's global git config and hooks out of the test
 };
 for (const k of Object.keys(env)) if (k.startsWith('CLAUDE_PLUGIN_OPTION_') || k.startsWith('TOKENTABY_')) delete env[k];
+// the dev_id the developer chose at install (tokentaby never reads git user.email)
+env.CLAUDE_PLUGIN_OPTION_DEV_ID = 'sami';
 
 function sh(cmd, args, opts = {}) {
   const r = spawnSync(cmd, args, { cwd: repo, env: { ...env, ...(opts.env || {}) }, encoding: 'utf8', input: opts.input });
@@ -87,6 +89,15 @@ test('init creates .tokentaby/ and the pre-commit hook', () => {
   assert.match(fs.readFileSync(path.join(repo, '.git', 'hooks', 'pre-commit'), 'utf8'), /# >>> tokentaby >>>/);
   git('add', '.tokentaby', '.github');
   git('commit', '-q', '-m', 'chore: add tokentaby');
+});
+
+test('without a chosen dev_id nothing is logged and the session says how to start', () => {
+  const r = hook({ hook_event_name: 'SessionStart', source: 'startup', session_id: 'sess-nodev' }, { CLAUDE_PLUGIN_OPTION_DEV_ID: '' });
+  assert.match(JSON.parse(r.stdout).systemMessage, /not chosen your developer id/);
+  hook({ hook_event_name: 'UserPromptSubmit', prompt: 'hello', session_id: 'sess-nodev' }, { CLAUDE_PLUGIN_OPTION_DEV_ID: '' });
+  hook({ hook_event_name: 'Stop', session_id: 'sess-nodev' }, { CLAUDE_PLUGIN_OPTION_DEV_ID: '' });
+  assert.equal(spool().length, 0);
+  assert.equal(hook({ hook_event_name: 'SessionStart', source: 'startup', session_id: 'sess-nodev' }, { CLAUDE_PLUGIN_OPTION_DEV_ID: '' }).stdout, '', 'the reminder is at most daily');
 });
 
 test('a session is collected into the clone-local spool', () => {

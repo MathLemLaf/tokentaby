@@ -31,7 +31,7 @@ The team setting is a floor: each developer's plugin setting can make their own 
 | `rollups/<YYYY-MM>.ndjson` | older months squashed into daily totals by `tokentaby rollup` |
 | `pricing.json` | price table, USD per million tokens; edit it in the dashboard's Settings |
 | `config.json` | team policy: `prompt_mode`, `sync` (`ride-along` / `auto-commit` / `manual`), `truncate_chars` |
-| `devs.json` | optional display names and commit emails per dev id |
+| `devs.json` | optional display names and commit emails per dev id. Each developer chooses their id at install; map any id that isn't their email's local part here, so the CI check recognizes their commits |
 | `.gitattributes` | `merge=union`, so concurrent appends never conflict |
 
 Each developer only ever writes `devs/<their id>/`. Until usage is committed, new events wait in `.git/tokentaby/`, so `git status` stays clean.

@@ -68,7 +68,8 @@ function context(p) {
   if (!repo || !store.isInitialized(repo.root)) return null;
   const state = store.readState(repo);
   const cfg = resolveConfig(repo.root, state.options);
-  const dev = cfg.dev_id ? store.sanitizeDev(cfg.dev_id) : state.dev || store.resolveDevId(repo.root);
+  // inside a hook, only the option value Claude Code passes right now counts
+  const dev = store.devIdFor(userOptions());
   let pricing = null;
   return {
     p,
@@ -182,9 +183,8 @@ function agentTypeFor(ctx, agentId, file, hinted) {
 function onSessionStart(ctx) {
   const { p, repo } = ctx;
   store.writeSession(ctx.session, { repoRoot: repo.root, transcript: ctx.transcript, started: ctx.now, source: p.source || null });
-  // fresh identity + plugin location for the git hook and the CLI (they run outside Claude)
-  const dev = ctx.cfg.dev_id ? store.sanitizeDev(ctx.cfg.dev_id) : store.resolveDevId(repo.root);
-  ctx.dev = dev;
+  // identity + plugin location for the git hook and the CLI (they run outside Claude)
+  const dev = ctx.dev;
   const state = store.writeState(repo, { dev, plugin_root: PLUGIN_ROOT, version: pluginVersion(), options: userOptions(), data_dir: store.dataDir(), last_session: ctx.now });
   if (!git.hasPreCommit(repo)) {
     const r = git.installPreCommit(repo);
@@ -218,6 +218,21 @@ function onSessionStart(ctx) {
       }) + '\n'
     );
   }
+}
+
+/** Tracked repo, but no dev_id chosen yet: log nothing, say how to start (at most daily). */
+function onSessionStartWithoutDev(ctx) {
+  const today = ctx.now.slice(0, 10);
+  const state = store.writeState(ctx.repo, { plugin_root: PLUGIN_ROOT, version: pluginVersion(), options: userOptions(), data_dir: store.dataDir(), last_session: ctx.now });
+  if (state.dev_notice === today) return;
+  store.writeState(ctx.repo, { dev_notice: today });
+  process.stdout.write(
+    JSON.stringify({
+      systemMessage:
+        'tokentaby: this repo tracks Claude Code usage, but you have not chosen your developer id yet, so nothing is logged. ' +
+        'Set dev_id in /plugin → tokentaby (e.g. the part of your work email before @).',
+    }) + '\n'
+  );
 }
 
 function onPrompt(ctx) {
@@ -338,7 +353,9 @@ async function main() {
   const handler = HANDLERS[p.hook_event_name];
   if (!handler) return;
   const ctx = context(p);
-  if (ctx) handler(ctx);
+  if (!ctx) return;
+  if (ctx.dev) handler(ctx);
+  else if (p.hook_event_name === 'SessionStart') onSessionStartWithoutDev(ctx);
 }
 
 if (require.main === module) {
