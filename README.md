@@ -56,7 +56,7 @@ Pin the plugin in the repo so all developers run the same version and schema. Co
 {
   "extraKnownMarketplaces": {
     "tokentaby": {
-      "source": { "source": "github", "repo": "mdsami/tokentaby", "ref": "tokentaby--v0.1.1" }
+      "source": { "source": "github", "repo": "mdsami/tokentaby", "ref": "tokentaby--v0.1.2" }
     }
   },
   "enabledPlugins": {
@@ -123,6 +123,7 @@ Options (`/tokentaby:init …`, or `node <plugin>/bin/tokentaby init …` in a t
 | `/tokentaby:backfill` | import your past sessions in this repo (once) |
 | `/tokentaby:snapshot` | write the dashboard as one offline HTML file (`--no-prompts` to share safely) |
 | `/tokentaby:sync` | commit your queued usage now (manual / auto-commit modes) |
+| `/tokentaby:help` | list all of these commands with their options |
 | *"what did TKT-142 cost?"* | Claude answers from the logs using the bundled `tokentaby` skill |
 
 Plugin commands always carry the plugin's name, so type `/tokentaby:` to see them all with their descriptions. Questions need no command at all: just ask Claude.
@@ -372,7 +373,7 @@ lib/                   transcript-adapter, pricing, store, git, sync, aggregate,
 bin/tokentaby          CLI
 dashboard/index.html   single-file UI
 commands/              /tokentaby:usage, init, backfill, task, dashboard, snapshot,
-                       sync, status
+                       sync, status, help
 skills/tokentaby/      lets Claude answer usage questions
 templates/             pricing table, repo README, CI workflow, team settings
 test/                  unit + end-to-end tests with transcript fixtures

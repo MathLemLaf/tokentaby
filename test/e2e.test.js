@@ -299,6 +299,13 @@ test('snapshot is a self-contained dashboard whose in-page API answers every vie
   });
 });
 
+test('/tokentaby:help lists every slash command the plugin ships', () => {
+  const out = cli('commands').stdout;
+  for (const f of fs.readdirSync(path.join(ROOT, 'commands'))) {
+    assert.match(out, new RegExp(`/tokentaby:${f.replace(/\.md$/, '')}\\b`), f);
+  }
+});
+
 test('dashboard API serves the data on loopback', async (t) => {
   const { createServer } = require('../lib/server');
   const { findRepo } = require('../lib/git');

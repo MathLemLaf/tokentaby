@@ -50,6 +50,7 @@ Usage: tokentaby <command> [options]
                               import this repo's past Claude Code sessions
   snapshot [--out FILE] [--no-prompts]
                               write the dashboard as one offline HTML file
+  commands                    list the /tokentaby: slash commands (what /tokentaby:help shows)
   precommit                   git pre-commit hook entry (installed by init)
 
 Options:  --repo PATH  --json  --data-dir DIR (plugin data folder; the slash commands pass it)
@@ -149,6 +150,31 @@ function queuedCount(repo) {
 const commands = {
   help() {
     process.stdout.write(HELP);
+  },
+
+  /** The slash commands, read from commands/*.md so this list never drifts from what is installed. */
+  commands() {
+    const dir = path.join(ROOT, 'commands');
+    const order = ['usage', 'init', 'backfill', 'task', 'dashboard', 'snapshot', 'sync', 'status', 'help'];
+    const names = fs
+      .readdirSync(dir)
+      .filter((f) => f.endsWith('.md'))
+      .map((f) => f.slice(0, -3))
+      .sort((x, y) => (order.indexOf(x) + 1 || 99) - (order.indexOf(y) + 1 || 99) || (x < y ? -1 : 1));
+    const lines = [`tokentaby ${VERSION} — type /tokentaby: in Claude Code to autocomplete these`, ''];
+    for (const name of names) {
+      const front = (/^---\n([\s\S]*?)\n---/.exec(fs.readFileSync(path.join(dir, `${name}.md`), 'utf8')) || [])[1] || '';
+      const field = (k) => ((new RegExp(`^${k}:\\s*(.*)$`, 'm').exec(front) || [])[1] || '').replace(/^"(.*)"$/, '$1');
+      lines.push(`  ${`/tokentaby:${name}`.padEnd(22)}${field('description')}`);
+      if (field('argument-hint')) lines.push(`  ${''.padEnd(22)}${field('argument-hint')}`);
+    }
+    lines.push(
+      '',
+      'Or just ask: "what did TKT-142 cost?", "who used the most Opus this week?" — Claude answers from the logs.',
+      `Terminal (query, export, rollup, validate, ingest-otel): node "${path.join(ROOT, 'bin', 'tokentaby')}" help`,
+      'Costs are estimated API-equivalent prices for subscription usage, not a bill.'
+    );
+    print(lines.join('\n'));
   },
 
   summary(a) {
