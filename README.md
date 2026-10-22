@@ -77,7 +77,7 @@ Ensuite :
 
 - La **première** règle qui correspond gagne ; un motif couvre aussi les sous-dossiers.
 - `*` = un dossier (réutilisable avec `{1}`, `{2}`…), `**` = n'importe quelle profondeur, `{name}` = nom du dossier du projet.
-- Le « dossier du projet » est la racine git quand tu es dans un dépôt (un `cd` dans un sous-dossier ne crée pas un nouveau projet), sinon le dossier où tu as lancé Claude Code.
+- Le « dossier du projet » est le dossier où tu as **lancé** Claude Code (un `cd` en cours de session ne change rien). Ainsi `~/dev/agile-lafond/apps/carnet` est classé comme l'application *carnet*, même si tout `agile-lafond` est un seul dépôt git.
 
 ## Garder le fork à jour avec l'original
 

@@ -1,16 +1,21 @@
 {
-  "_aide": "Règles de classement par dossier. La première règle qui correspond gagne. '*' = un dossier (réutilisable avec {1}, {2}…), '**' = n'importe quelle profondeur ; un motif couvre aussi ses sous-dossiers. {name} = nom du dossier du projet. Modifier une règle reclasse tout l'historique. Vérifie avec : tokentaby hub rules",
+  "_aide": "Règles de classement par dossier (le dossier où Claude Code a été lancé). La première règle qui correspond gagne. '*' = un dossier (réutilisable avec {1}, {2}…), '**' = n'importe quelle profondeur ; un motif couvre aussi ses sous-dossiers. {name} = nom du dossier. Modifier une règle reclasse tout l'historique. Vérifie avec : tokentaby hub rules",
   "rules": [
-    { "match": "~/dev/agile-lafond/*", "sphere": "Dev", "app": "{1}", "kind": "développement" },
-    { "match": "~/dev/agile-lafond", "sphere": "Dev", "app": "agile-lafond", "kind": "agents" },
-    { "match": "~/dev/genealogie", "sphere": "Généalogie", "app": "Les Geoffroy-Lafond", "kind": "recherche" },
-    { "match": "~/dev/tokentaby*", "sphere": "Dev", "app": "tokentaby", "kind": "outillage" },
-    { "match": "~/dev/*", "sphere": "Dev", "app": "{1}", "kind": "développement" },
+    { "match": "~/dev/agile-lafond/apps/*", "sphere": "Dev", "app": "{1}", "kind": "développement" },
+    { "match": "~/dev/agile-lafond/banc-essai", "sphere": "Dev", "app": "banc d'essai", "kind": "essais" },
+    { "match": "~/dev/agile-lafond/outils", "sphere": "Dev", "app": "outils Agile Lafond", "kind": "outillage" },
+    { "match": "~/dev/agile-lafond", "sphere": "Dev", "app": "Agile Lafond (équipe)", "kind": "agents" },
 
-    { "match": "~/vie/*/agents/*", "sphere": "{1}", "app": "{2}", "kind": "agent" },
-    { "match": "~/vie/*", "sphere": "{1}", "app": "{name}", "kind": "vie perso" },
+    { "match": "~/dev/genealogie", "sphere": "Généalogie", "app": "Arbre généalogique", "kind": "recherche" },
+    { "match": "~/dev/les-geoffroy-lafond", "sphere": "Généalogie", "app": "Site Les Geoffroy-Lafond", "kind": "site web" },
 
-    { "match": "~/Documents/prive/**", "ignore": true }
+    { "match": "~/dev/agents-claude/*/*", "sphere": "{1}", "app": "{2}", "kind": "agent" },
+    { "match": "~/dev/agents-claude/*", "sphere": "{1}", "app": "coordinateur {1}", "kind": "agent" },
+    { "match": "~/dev/agents-claude", "sphere": "Chief of staff", "app": "chief of staff", "kind": "agent" },
+
+    { "match": "~/dev/tokentaby*", "sphere": "Outils", "app": "tokentaby", "kind": "outillage" },
+    { "match": "~/dev/demo-hook", "sphere": "Dev", "app": "demo-hook", "kind": "essais" },
+    { "match": "~/dev/*", "sphere": "Dev", "app": "{1}", "kind": "développement" }
   ],
   "default": { "sphere": "Non classé", "app": "{name}", "kind": "autre" }
 }
