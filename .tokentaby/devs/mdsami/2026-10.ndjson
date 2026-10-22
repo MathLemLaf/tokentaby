@@ -1,3 +1,12 @@
 {"v":1,"t":"session","ts":"2026-10-22T12:15:24.581Z","dev":"mdsami","session":"c78d0149-e70e-4b9f-b483-904d80557eee","event":"start","source":"startup","cwd_rel":".","branch":"main","model":"claude-opus-5"}
 {"v":1,"t":"prompt","ts":"2026-10-22T12:16:39.442Z","dev":"mdsami","session":"c78d0149-e70e-4b9f-b483-904d80557eee","task":null,"hash":"ddadf892c60e9155","chars":15,"text":"/tokentaby:init"}
 {"v":1,"t":"prompt","ts":"2026-10-22T12:16:54.370Z","dev":"mdsami","session":"c78d0149-e70e-4b9f-b483-904d80557eee","task":null,"hash":"f2829aae730acb0f","chars":73,"text":"git add .tokentaby && git commit -m \"chore: add tokentaby usage tracking\""}
+{"v":1,"t":"turn","ts":"2026-10-22T12:17:03.647Z","dev":"mdsami","session":"c78d0149-e70e-4b9f-b483-904d80557eee","agent":"main","agent_type":null,"model":"claude-opus-5","in":6,"out":793,"cw":24481,"cr":129649,"usd":0.329491,"task":null,"branch":"main","dur_ms":23199,"req":3,"cw1h":24481,"effort":"medium"}
+{"v":1,"t":"prompt","ts":"2026-10-22T12:17:09.254Z","dev":"mdsami","session":"c78d0149-e70e-4b9f-b483-904d80557eee","task":null,"hash":"00ca3d221eea545a","chars":19,"text":"/tokentaby:backfill"}
+{"v":1,"t":"session","ts":"2026-10-22T12:17:29.990Z","dev":"mdsami","session":"01839419-574a-479b-a2d0-ccaa73b266b6","event":"start","source":"startup","cwd_rel":".","branch":"main","model":"claude-opus-5"}
+{"v":1,"t":"prompt","ts":"2026-10-22T12:17:30.214Z","dev":"mdsami","session":"01839419-574a-479b-a2d0-ccaa73b266b6","task":null,"hash":"00ca3d221eea545a","chars":19,"text":"/tokentaby:backfill"}
+{"v":1,"t":"session","ts":"2026-10-22T12:18:19.744Z","dev":"mdsami","session":"b00a4d8f-dac4-4d12-9426-7aea8af04652","event":"start","source":"startup","cwd_rel":".","branch":"main","model":"claude-opus-5"}
+{"v":1,"t":"prompt","ts":"2026-10-22T12:18:19.977Z","dev":"mdsami","session":"b00a4d8f-dac4-4d12-9426-7aea8af04652","task":null,"hash":"00ca3d221eea545a","chars":19,"text":"/tokentaby:backfill"}
+{"v":1,"t":"session","ts":"2026-10-22T12:18:39.982Z","dev":"mdsami","session":"b5138528-e8bd-4659-aa7c-ed6b2d9f4a40","event":"start","source":"startup","cwd_rel":".","branch":"main","model":"claude-opus-5"}
+{"v":1,"t":"prompt","ts":"2026-10-22T12:18:40.201Z","dev":"mdsami","session":"b5138528-e8bd-4659-aa7c-ed6b2d9f4a40","task":null,"hash":"ddadf892c60e9155","chars":15,"text":"/tokentaby:init"}
+{"v":1,"t":"prompt","ts":"2026-10-22T12:19:01.441Z","dev":"mdsami","session":"b5138528-e8bd-4659-aa7c-ed6b2d9f4a40","task":null,"hash":"feb6ecaa56cfbe78","chars":15,"text":"/tokentaby:sync"}
