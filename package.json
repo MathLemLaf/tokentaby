@@ -1,15 +1,46 @@
 {
   "name": "tokentaby",
   "version": "0.1.3",
-  "description": "Claude Code plugin: per-repo, per-developer usage tracking with estimated cost, committed to git, and a local team dashboard.",
-  "private": true,
+  "description": "Claude Code usage tracking per repo and developer: tokens, models, agents, tasks and estimated cost, committed to git, with a local team dashboard. Claude Code plugin + CLI.",
   "license": "MIT",
+  "author": "mdsami",
+  "homepage": "https://github.com/mdsami/tokentaby#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mdsami/tokentaby.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mdsami/tokentaby/issues"
+  },
+  "keywords": [
+    "claude-code",
+    "claude-code-plugin",
+    "usage",
+    "tokens",
+    "cost",
+    "analytics",
+    "team",
+    "dashboard"
+  ],
+  "bin": {
+    "tokentaby": "scripts/tokentaby.js"
+  },
+  "files": [
+    ".claude-plugin/",
+    "commands/",
+    "dashboard/",
+    "hooks/",
+    "lib/",
+    "scripts/",
+    "skills/",
+    "templates/"
+  ],
   "scripts": {
     "test": "node --test",
-    "validate-plugin": "claude plugin validate ."
+    "validate-plugin": "claude plugin validate .",
+    "prepublishOnly": "node --test"
   },
   "engines": {
     "node": ">=18"
-  },
-  "repository": "github:mdsami/tokentaby"
+  }
 }

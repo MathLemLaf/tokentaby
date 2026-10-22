@@ -81,6 +81,18 @@ claude plugin update tokentaby               # then restart Claude Code
 claude plugin uninstall tokentaby
 ```
 
+### The CLI from npm (optional)
+
+The plugin collects usage. The `tokentaby` command line tool reads it: summaries, the dashboard, exports, rollups and the CI validator. It's also published on npm, so you can use it in a terminal or in CI without locating the plugin folder:
+
+```bash
+npm install -g tokentaby
+tokentaby summary          # in any tracked repo
+tokentaby serve            # the dashboard
+```
+
+It needs only Node.js 18+ and has no dependencies. Installing it doesn't log anything: collection always comes from the Claude Code plugin.
+
 ---
 
 ## Set up a repository (once per repo)
@@ -322,7 +334,7 @@ Optional, for teams that already export Claude Code OpenTelemetry. It imports `c
 
 ## CLI reference
 
-The CLI ships inside the plugin. Run it as `node <plugin-dir>/scripts/tokentaby.js <command>`.
+Install it with `npm install -g tokentaby` and run `tokentaby <command>`, or use the copy inside the plugin: `node <plugin-dir>/scripts/tokentaby.js <command>`.
 
 ```
 summary                     today / week / month, you vs team (default)
