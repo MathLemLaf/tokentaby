@@ -1,3 +1,97 @@
+# tokentaby — ma version (MathLemLaf)
+
+Fork de [mdsami/tokentaby](https://github.com/mdsami/tokentaby) (licence MIT). L'original suit l'usage de Claude Code **dépôt par dépôt, pour une équipe**. Cette version ajoute un **mode hub** : **tout** mon usage de Claude Code, peu importe le dossier, va dans **un seul dépôt privé**, et chaque dossier est rangé dans une **sphère**, une **application** et un **type d'usage** que je peux filtrer.
+
+<p align="center"><img src="assets/screenshots/spheres.png" alt="Onglet Sphères : coût quotidien par sphère, répartition, types d'usage, applications et dossiers" width="900" /></p>
+
+*(capture faite avec des données de démonstration)*
+
+## Ce qui change par rapport à l'original
+
+- **Hub central** : les hooks écrivent dans `~/dev/tokentaby-data` (ou le dossier que tu choisis), quel que soit le dossier où Claude Code tourne, qu'il soit un dépôt git ou non. Rien n'est écrit dans tes projets.
+- **Classement par dossier** (`.tokentaby/spheres.json` dans le hub) : `~/dev/agile-lafond/*` → sphère *Dev*, application = nom du dossier, etc. Le classement se fait à la lecture : changer une règle reclasse tout l'historique.
+- **Filtres Sphère / Application / Type** partout dans le tableau de bord, plus un onglet **Sphères** ; mêmes filtres dans la CLI (`--sphere`, `--app`, `--kind`).
+- **Exclusions** : une règle `"ignore": true` empêche d'enregistrer quoi que ce soit pour un dossier.
+- **Rétro-import global** : `tokentaby backfill` importe tout `~/.claude/projects/`, tous dossiers confondus.
+- **Envoi vers GitHub** : en fin de session, l'usage est commité dans le hub, puis poussé vers ton dépôt privé (option `--push`).
+- **CAD** comme devise par défaut, interface et CLI en grande partie en français.
+- Sans hub configuré, tout fonctionne exactement comme l'original.
+
+> **Limite** : seul **Claude Code** est mesuré (terminal, agents, Claude Code dans l'app de bureau). L'usage de Cowork et du chat claude.ai ne laisse pas de journaux locaux. Avec un abonnement Pro/Max, les coûts sont des **équivalents API**, pas ta facture.
+
+## Installation (une fois, sur le Mac)
+
+Prérequis : Node.js 18+, git, Claude Code.
+
+```bash
+# 1. Le code : ton fork sur GitHub (MathLemLaf/tokentaby), cloné dans ~/dev
+git clone https://github.com/MathLemLaf/tokentaby.git ~/dev/tokentaby
+
+# 2. La commande `tokentaby` dans le terminal
+npm install -g ~/dev/tokentaby
+
+# 3. Le plugin Claude Code (il enregistre l'usage)
+claude plugin marketplace add MathLemLaf/tokentaby
+claude plugin install tokentaby@tokentaby-math --config dev_id=math
+
+# 4. Le hub central (dépôt de données privé)
+tokentaby hub init ~/dev/tokentaby-data --push
+```
+
+Ensuite :
+
+1. **Ajuste tes règles** dans `~/dev/tokentaby-data/.tokentaby/spheres.json` (des exemples sont déjà là).
+2. **Ouvre une session Claude Code** n'importe où, puis tape `/tokentaby:backfill` pour importer ton historique.
+3. **Vérifie le classement** : `tokentaby hub rules` (ou `/tokentaby:hub rules`).
+4. **Relie le hub à un dépôt GitHub PRIVÉ** :
+   ```bash
+   cd ~/dev/tokentaby-data
+   git add -A && git commit -m "init hub"
+   gh repo create tokentaby-data --private --source . --push   # ou crée-le sur github.com puis : git remote add origin … && git push -u origin main
+   ```
+
+## Au quotidien
+
+| | |
+|---|---|
+| `/tokentaby:usage` ou `tokentaby summary` | aujourd'hui / semaine / mois, avec la répartition par sphère |
+| `/tokentaby:dashboard` ou `tokentaby serve` | le tableau de bord sur http://localhost:7331 |
+| `tokentaby hub rules` | comment chaque dossier est classé |
+| `tokentaby hub sync` | envoyer sur GitHub maintenant |
+| `tokentaby query spheres --sphere Dev` | JSON pour scripts ou pour Claude |
+| « Combien m'a coûté la généalogie ce mois-ci ? » | Claude répond directement à partir des journaux |
+
+## Les règles de classement
+
+```json
+{
+  "rules": [
+    { "match": "~/dev/agile-lafond/*", "sphere": "Dev", "app": "{1}", "kind": "développement" },
+    { "match": "~/dev/genealogie", "sphere": "Généalogie", "app": "Les Geoffroy-Lafond", "kind": "recherche" },
+    { "match": "~/vie/*", "sphere": "{1}", "app": "{name}", "kind": "vie perso" },
+    { "match": "~/Documents/prive/**", "ignore": true }
+  ],
+  "default": { "sphere": "Non classé", "app": "{name}", "kind": "autre" }
+}
+```
+
+- La **première** règle qui correspond gagne ; un motif couvre aussi les sous-dossiers.
+- `*` = un dossier (réutilisable avec `{1}`, `{2}`…), `**` = n'importe quelle profondeur, `{name}` = nom du dossier du projet.
+- Le « dossier du projet » est la racine git quand tu es dans un dépôt (un `cd` dans un sous-dossier ne crée pas un nouveau projet), sinon le dossier où tu as lancé Claude Code.
+
+## Garder le fork à jour avec l'original
+
+```bash
+cd ~/dev/tokentaby
+git remote add upstream https://github.com/mdsami/tokentaby.git   # une fois
+git pull --rebase upstream main && git push --force-with-lease
+claude plugin marketplace update tokentaby-math && claude plugin update tokentaby
+```
+
+---
+
+*Documentation de l'original (en anglais) ci-dessous.*
+
 # TokenTaby
 
 [![npm](https://img.shields.io/npm/v/tokentaby.svg)](https://www.npmjs.com/package/tokentaby) [![license](https://img.shields.io/npm/l/tokentaby.svg)](LICENSE)

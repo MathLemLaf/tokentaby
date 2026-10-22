@@ -59,7 +59,7 @@ test('a repo pricing.json overrides and extends the built-in table', () => {
 });
 
 test('fx table carries exactly the currencies Claude bills in', () => {
-  assert.deepEqual(Object.keys(p.fx).sort(), ['EUR', 'INR', 'USD']);
+  assert.deepEqual(Object.keys(p.fx).sort(), ['CAD', 'EUR', 'INR', 'USD']);
   assert.equal(p.fx.USD, 1);
 });
 

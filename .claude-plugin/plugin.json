@@ -1,14 +1,21 @@
 {
   "name": "tokentaby",
-  "version": "0.1.3",
-  "description": "Per-repo, per-developer Claude Code usage tracking — tokens, models, agents, tasks, prompts and estimated (API-equivalent) cost — committed to git, with a local team dashboard.",
+  "version": "0.1.3-math.1",
+  "description": "Per-repo, per-developer Claude Code usage tracking — tokens, models, agents, tasks, prompts and estimated (API-equivalent) cost — committed to git, with a local team dashboard. Fork « ma version » : mode hub (tout l'usage dans un dépôt central) et classement par sphère / application / type.",
   "author": {
-    "name": "mdsami"
+    "name": "MathLemLaf (fork de mdsami/tokentaby)"
   },
-  "homepage": "https://github.com/mdsami/tokentaby",
-  "repository": "https://github.com/mdsami/tokentaby",
+  "homepage": "https://github.com/MathLemLaf/tokentaby",
+  "repository": "https://github.com/MathLemLaf/tokentaby",
   "license": "MIT",
-  "keywords": ["usage", "tokens", "cost", "analytics", "team", "dashboard"],
+  "keywords": [
+    "usage",
+    "tokens",
+    "cost",
+    "analytics",
+    "team",
+    "dashboard"
+  ],
   "userConfig": {
     "dev_id": {
       "type": "string",
@@ -16,18 +23,34 @@
       "description": "The name your usage is logged under (.tokentaby/devs/<id>/), visible to your team. Nothing is logged until you set it. Using the part of your work email before @ lets the CI check match your commits.",
       "required": true
     },
+    "hub": {
+      "type": "string",
+      "title": "Hub central (optionnel)",
+      "description": "Dossier de ton dépôt central (ex. ~/dev/tokentaby-data) : tout ton usage, de tous les dossiers, y est enregistré et classé par sphère / application / type. Vide = suivi par dépôt (comportement d'origine). Le fichier ~/.tokentaby-hub, créé par `tokentaby hub init`, suffit aussi.",
+      "default": ""
+    },
     "prompt_mode": {
       "type": "string",
       "title": "Prompt logging",
       "description": "How much prompt text to log: team (use the repo's policy), truncated (first 200 chars), hash_only (no text), full. The repo's policy is a floor: you can be more private, never less.",
-      "options": ["team", "truncated", "hash_only", "full"],
+      "options": [
+        "team",
+        "truncated",
+        "hash_only",
+        "full"
+      ],
       "default": "team"
     },
     "sync": {
       "type": "string",
       "title": "Git sync mode",
       "description": "team (use the repo's setting), ride-along (usage ships inside your normal commits), auto-commit (a usage-only commit at session end, never pushed), manual (/tokentaby:sync).",
-      "options": ["team", "ride-along", "auto-commit", "manual"],
+      "options": [
+        "team",
+        "ride-along",
+        "auto-commit",
+        "manual"
+      ],
       "default": "team"
     },
     "port": {
@@ -41,9 +64,14 @@
     "currency": {
       "type": "string",
       "title": "Display currency",
-      "description": "Currency for estimated costs in the dashboard and /tokentaby:usage — the ones Claude bills in: USD, INR or EUR. Rates come from the fx table in .tokentaby/pricing.json.",
-      "options": ["USD", "INR", "EUR"],
-      "default": "USD"
+      "description": "Currency for estimated costs in the dashboard and /tokentaby:usage — the ones Claude bills in: USD, CAD, INR or EUR. Rates come from the fx table in .tokentaby/pricing.json.",
+      "options": [
+        "USD",
+        "CAD",
+        "INR",
+        "EUR"
+      ],
+      "default": "CAD"
     }
   }
 }

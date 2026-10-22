@@ -1,0 +1,16 @@
+{
+  "_aide": "Règles de classement par dossier. La première règle qui correspond gagne. '*' = un dossier (réutilisable avec {1}, {2}…), '**' = n'importe quelle profondeur ; un motif couvre aussi ses sous-dossiers. {name} = nom du dossier du projet. Modifier une règle reclasse tout l'historique. Vérifie avec : tokentaby hub rules",
+  "rules": [
+    { "match": "~/dev/agile-lafond/*", "sphere": "Dev", "app": "{1}", "kind": "développement" },
+    { "match": "~/dev/agile-lafond", "sphere": "Dev", "app": "agile-lafond", "kind": "agents" },
+    { "match": "~/dev/genealogie", "sphere": "Généalogie", "app": "Les Geoffroy-Lafond", "kind": "recherche" },
+    { "match": "~/dev/tokentaby*", "sphere": "Dev", "app": "tokentaby", "kind": "outillage" },
+    { "match": "~/dev/*", "sphere": "Dev", "app": "{1}", "kind": "développement" },
+
+    { "match": "~/vie/*/agents/*", "sphere": "{1}", "app": "{2}", "kind": "agent" },
+    { "match": "~/vie/*", "sphere": "{1}", "app": "{name}", "kind": "vie perso" },
+
+    { "match": "~/Documents/prive/**", "ignore": true }
+  ],
+  "default": { "sphere": "Non classé", "app": "{name}", "kind": "autre" }
+}

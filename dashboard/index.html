@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -216,7 +216,7 @@ tbody tr:hover { background: var(--hover); }
     <span class="brand">tokentaby</span>
     <span class="repo" id="repo"></span>
     <span class="spacer"></span>
-    <span class="pill" title="The team is on Claude subscriptions; costs are what the same tokens would cost at API list prices.">Costs are estimates · API-equivalent</span>
+    <span class="pill" title="Avec un abonnement Pro/Max, tu ne paies pas au token : ces coûts sont ce que les mêmes tokens coûteraient au prix public de l'API.">Coûts estimés · équivalent API</span>
     <button class="iconbtn" id="theme" type="button" title="Theme">Auto</button>
   </header>
   <nav class="tabs" id="tabs" aria-label="Pages"></nav>
@@ -265,7 +265,7 @@ tbody tr:hover { background: var(--hover); }
   // ------------------------------------------------------------ state
   const S = {
     meta: null,
-    filters: Object.assign({ range: 'month', from: '', to: '', dev: '', model: '', prices: 'logged' }, store.get('filters', {})),
+    filters: Object.assign({ range: 'month', from: '', to: '', dev: '', model: '', prices: 'logged', sphere: '', app: '', kind: '' }, store.get('filters', {})),
     currency: store.get('currency', null),
     colors: new Map(),
   };
@@ -294,6 +294,7 @@ tbody tr:hover { background: var(--hover); }
     const p = { from: r.from, to: r.to };
     if (S.filters.dev) p.dev = S.filters.dev;
     if (S.filters.model) p.model = S.filters.model;
+    for (const k of ['sphere', 'app', 'kind']) if (S.filters[k]) p[k] = S.filters[k];
     if (S.filters.prices === 'current') p.prices = 'current';
     return Object.assign(p, extra || {});
   }
@@ -312,7 +313,7 @@ tbody tr:hover { background: var(--hover); }
 
   // ------------------------------------------------------------ formatting
   // the currencies Claude bills in; estimates are USD, converted for display only
-  const CURRENCIES = ['USD', 'INR', 'EUR'];
+  const CURRENCIES = ['CAD', 'USD', 'EUR', 'INR'];
   const fx = () => (S.meta && S.meta.fx) || { USD: 1 };
   const currencies = () => CURRENCIES.filter((c) => fx()[c]);
   const currency = () => (currencies().includes(S.currency) ? S.currency : 'USD');
@@ -373,6 +374,8 @@ tbody tr:hover { background: var(--hover); }
     (S.meta.models || []).slice(0, SLOTS.length).forEach((m, i) => S.colors.set(m, `var(${SLOTS[i]})`));
   }
   const colorOf = (model) => S.colors.get(model) || 'var(--other)';
+  // sphères : couleur stable selon le rang de la sphère sur tout l'historique
+  const sphereColor = (k) => { const i = ((S.meta && S.meta.spheres) || []).indexOf(k); return i >= 0 && i < SLOTS.length ? `var(${SLOTS[i]})` : 'var(--other)'; };
   /** Fold models without a slot into "Other" so a 9th hue is never invented. */
   function foldModels(list, valueKey = 'usd') {
     const out = [];
@@ -436,7 +439,7 @@ tbody tr:hover { background: var(--hover); }
    */
   function stackedColumns(host, { days, keys, color, label, value = fmt.money, short = fmt.moneyShort, height = 200 }) {
     const W = Math.max(300, host.clientWidth || 640);
-    const padL = 48;
+    const padL = 60;
     const padR = 6;
     const padT = 8;
     const axisH = 22;
@@ -606,7 +609,7 @@ tbody tr:hover { background: var(--hover); }
       h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: title }), hint ? h('div', { class: 'hint', text: hint }) : null), h('span', { class: 'spacer' }), btn), body);
     function paint() {
       if (btn) {
-        btn.textContent = withTable ? 'Hide data table' : 'Show data table';
+        btn.textContent = withTable ? 'Masquer le tableau' : 'Voir le tableau';
         btn.setAttribute('aria-expanded', String(withTable));
       }
       body.replaceChildren();
@@ -630,7 +633,7 @@ tbody tr:hover { background: var(--hover); }
     const total = (r) => s.keys.reduce((a, k) => a + (r.values[k] || 0), 0);
     return dataTable({
       columns: [
-        { key: 'day', label: 'Day', fmt: (r) => fmt.dayLong(r.day) },
+        { key: 'day', label: 'Jour', fmt: (r) => fmt.dayLong(r.day) },
         ...s.keys.map((k) => ({ key: k, label: fmt.model(k), num: true, sort: (r) => r.values[k] || 0, fmt: (r) => fmt.money(r.values[k] || 0) })),
         { key: 'total', label: 'Total', num: true, sort: total, fmt: (r) => fmt.money(total(r)) },
       ],
@@ -688,7 +691,7 @@ tbody tr:hover { background: var(--hover); }
     const max = Math.max(0, ...p.profile.map((d) => d.usd)) || 1;
     const table = dataTable({
       columns: [
-        { key: 'name', label: 'Developer', fmt: (r) => h('a', { class: 'who', href: devLink(r.dev), style: 'text-decoration:none' }, h('span', { class: 'avatar', 'aria-hidden': 'true', text: initials(r.name) }), h('span', {}, h('div', { text: r.name }), r.name !== r.dev ? h('div', { class: 'id mono', text: r.dev }) : null)) },
+        { key: 'name', label: 'Développeur', fmt: (r) => h('a', { class: 'who', href: devLink(r.dev), style: 'text-decoration:none' }, h('span', { class: 'avatar', 'aria-hidden': 'true', text: initials(r.name) }), h('span', {}, h('div', { text: r.name }), r.name !== r.dev ? h('div', { class: 'id mono', text: r.dev }) : null)) },
         {
           key: 'frontierShare', label: 'Share of spend', title: 'Bar length: spend. Inner segment: the part that went to the frontier model.',
           fmt: (r) => {
@@ -707,7 +710,7 @@ tbody tr:hover { background: var(--hover); }
         { key: 'cacheHit', label: 'Cache hit', num: true, title: 'Cache reads as a share of all input tokens', fmt: (r) => fmt.pct(r.cacheHit) },
         { key: 'usd', label: 'Cost', num: true, fmt: (r) => h('span', { class: 'cost-cell' }, h('span', { text: fmt.money(r.usd, 2) }), trendText(r.trend)) },
       ],
-      rows: p.profile, sortKey: 'usd', empty: 'No usage in this range.',
+      rows: p.profile, sortKey: 'usd', empty: 'Rien sur cette période.',
     });
     return h('div', {}, table, h('div', { class: 'foot' },
       h('span', {}, h('span', { class: 'sw', style: 'background:var(--frontier)' }), 'Frontier model'),
@@ -721,16 +724,16 @@ tbody tr:hover { background: var(--hover); }
     if (!rows.length) return h('div', { class: 'muted', text: 'No task-attributed usage yet. Name branches like feat/TKT-142-… or run /tokentaby:task TKT-142.' });
     return dataTable({
       columns: [
-        { key: 'task', label: 'Task', fmt: (r) => h('div', {}, h('div', { class: 'task-id' }, h('span', { text: r.task }), r.status ? h('span', { class: `status ${r.status}`, text: r.status }) : null), r.title ? h('div', { class: 'task-title', text: r.title }) : null) },
+        { key: 'task', label: 'Tâche', fmt: (r) => h('div', {}, h('div', { class: 'task-id' }, h('span', { text: r.task }), r.status ? h('span', { class: `status ${r.status}`, text: r.status }) : null), r.title ? h('div', { class: 'task-title', text: r.title }) : null) },
         {
-          key: 'models', label: 'Models', sort: (r) => r.devs.length,
+          key: 'models', label: 'Modèles', sort: (r) => r.devs.length,
           fmt: (r) => h('span', { class: 'dots', title: r.models.map((m) => fmt.model(m.model)).join(', ') },
             r.models.slice(0, 6).map((m) => h('span', { class: 'sw', style: `background:${colorOf(m.model)}` })),
             h('span', { class: 'muted', text: `${r.devs.length} ${r.devs.length === 1 ? 'dev' : 'devs'}` })),
         },
         { key: 'sessions', label: 'Sessions', num: true, fmt: (r) => fmt.int(r.sessions) },
         { key: 'turns', label: 'Turns', num: true, fmt: (r) => fmt.int(r.turns) },
-        { key: 'cr', label: 'Cache read', num: true, fmt: (r) => fmt.tokens(r.cr) },
+        { key: 'cr', label: 'Lecture cache', num: true, fmt: (r) => fmt.tokens(r.cr) },
         { key: 'usd', label: 'Cost', num: true, fmt: (r) => h('b', { text: fmt.money(r.usd, 2) }) },
       ],
       rows: rows.slice(0, 10), sortKey: 'usd',
@@ -763,7 +766,7 @@ tbody tr:hover { background: var(--hover); }
   function rhythmTable(r) {
     return dataTable({
       columns: [
-        { key: 'day', label: 'Day', sort: (x) => x.i },
+        { key: 'day', label: 'Jour', sort: (x) => x.i },
         { key: 'total', label: 'Turns', num: true, fmt: (x) => fmt.int(x.total) },
         { key: 'peak', label: 'Busiest hour', sort: (x) => x.peak, fmt: (x) => (x.total ? hourOf(x.peak) : '—') },
         ...Array.from({ length: 24 }, (_, hr) => ({ key: 'h' + hr, label: pad(hr), num: true, sort: (x) => x.row[hr], fmt: (x) => x.row[hr] || '' })),
@@ -800,17 +803,18 @@ tbody tr:hover { background: var(--hover); }
   }
 
   function emptyState() {
-    return h('div', { class: 'card empty' }, h('h2', { text: 'No usage logged yet' }),
+    return h('div', { class: 'card empty' }, h('h2', { text: 'Aucun usage enregistré pour l\'instant' }),
+      h('p', {}, 'En mode hub, les données arrivent après le premier tour de Claude Code dans n\'importe quel dossier. Pour importer ton historique : ', h('span', { class: 'mono', text: 'tokentaby backfill' }), '.'),
       h('p', {}, 'Data appears after the first Claude Code turn in this repo. Teammates\' usage arrives with ', h('span', { class: 'mono', text: 'git pull' }), '.'),
       h('p', { class: 'muted' }, 'Not set up? Run ', h('span', { class: 'mono', text: '/tokentaby:init' }), ' in Claude Code, then commit ', h('span', { class: 'mono', text: '.tokentaby/' }), '.'));
   }
 
   const devLink = (id) => '#/devs/' + encodeURIComponent(id);
   const tokenCols = [
-    { key: 'in', label: 'Input', num: true, fmt: (r) => fmt.tokens(r.in) },
-    { key: 'out', label: 'Output', num: true, fmt: (r) => fmt.tokens(r.out) },
-    { key: 'cw', label: 'Cache write', num: true, fmt: (r) => fmt.tokens(r.cw) },
-    { key: 'cr', label: 'Cache read', num: true, fmt: (r) => fmt.tokens(r.cr) },
+    { key: 'in', label: 'Entrée', num: true, fmt: (r) => fmt.tokens(r.in) },
+    { key: 'out', label: 'Sortie', num: true, fmt: (r) => fmt.tokens(r.out) },
+    { key: 'cw', label: 'Écriture cache', num: true, fmt: (r) => fmt.tokens(r.cw) },
+    { key: 'cr', label: 'Lecture cache', num: true, fmt: (r) => fmt.tokens(r.cr) },
   ];
 
   // ------------------------------------------------------------ pages
@@ -821,7 +825,7 @@ tbody tr:hover { background: var(--hover); }
       const p = sum.prev;
       const me = sum.me;
       const tiles = h('div', { class: 'tiles' },
-        tile({ label: 'Est. cost (API-equivalent)', value: fmt.money(t.usd), hero: true, sub: delta(t.usd, p.usd, p.days), trend: { points: sum.trend.map((d) => ({ day: d.day, v: d.usd })), label: 'Daily est. cost, last 30 days' } }),
+        tile({ label: 'Coût est. (équiv. API)', value: fmt.money(t.usd), hero: true, sub: delta(t.usd, p.usd, p.days), trend: { points: sum.trend.map((d) => ({ day: d.day, v: d.usd })), label: 'Daily est. cost, last 30 days' } }),
         tile({ label: 'Tokens', value: fmt.tokens(t.tokens), sub: `in ${fmt.tokens(t.in)} · out ${fmt.tokens(t.out)} · cache w ${fmt.tokens(t.cw)} · cache r ${fmt.tokens(t.cr)}` }),
         tile({ label: 'Sessions', value: fmt.int(t.sessions), sub: `${fmt.int(t.devs)} active devs` }),
         tile({ label: 'Prompts', value: fmt.int(t.prompts), sub: `${fmt.int(t.req)} API requests` }),
@@ -832,7 +836,7 @@ tbody tr:hover { background: var(--hover); }
       const days = dayRange(sum.range.from, sum.range.to);
       const span = `${fmt.day(sum.range.from)} – ${fmt.day(sum.range.to)}`;
       const spend = h('div', { class: 'grid' }, chartCard({
-        title: 'Daily spend by model', hint: span, wide: true,
+        title: 'Coût quotidien par modèle', hint: span, wide: true,
         top: () => h('div', {}, modelLegend(series.keys, true), peakLine(series)),
         draw: (host) => stackedColumns(host, { days: series.days, keys: series.keys, color: colorOf, label: 'Daily estimated cost by model' }),
         table: () => seriesTable(series),
@@ -842,25 +846,93 @@ tbody tr:hover { background: var(--hover); }
           h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Cost profile by developer' }), h('div', { class: 'hint', text: 'Deliberately not a leaderboard: the bar shows spend, the inner segment shows how much of it went to the frontier model.' }))),
           devProfile(pulse)),
         chartCard({
-          title: 'Model mix', hint: `Share of estimated cost, ${span}.`,
-          draw: (host) => byModel.length ? donut(host, { items: byModel.map((m) => ({ key: m.model, label: fmt.model(m.model), v: m.usd })), color: colorOf, label: 'Model share by estimated cost', caption: `${days.length}-day total` }) : host.append(h('div', { class: 'muted', text: 'No usage in this range.' })),
-          table: () => dataTable({ columns: [{ key: 'model', label: 'Model', fmt: (r) => fmt.model(r.model) }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }, { key: 'req', label: 'Requests', num: true, fmt: (r) => fmt.int(r.req) }], rows: sum.byModel }),
+          title: 'Répartition par modèle', hint: `Share of estimated cost, ${span}.`,
+          draw: (host) => byModel.length ? donut(host, { items: byModel.map((m) => ({ key: m.model, label: fmt.model(m.model), v: m.usd })), color: colorOf, label: 'Model share by estimated cost', caption: `${days.length}-day total` }) : host.append(h('div', { class: 'muted', text: 'Rien sur cette période.' })),
+          table: () => dataTable({ columns: [{ key: 'model', label: 'Modèle', fmt: (r) => fmt.model(r.model) }, { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }, { key: 'req', label: 'Requêtes', num: true, fmt: (r) => fmt.int(r.req) }], rows: sum.byModel }),
         }));
       const work = h('div', { class: 'split' },
         h('section', { class: 'card' },
-          h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Cost by task' }), h('div', { class: 'hint', text: 'Sort any column. Every turn already knows which ticket it belonged to.' }))),
+          h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Coût par tâche' }), h('div', { class: 'hint', text: 'Sort any column. Every turn already knows which ticket it belonged to.' }))),
           taskCost(tasks.tasks)),
         chartCard({
-          title: 'Working rhythm', hint: 'Turns by weekday and hour — when the team leans on Claude.',
+          title: 'Rythme de travail', hint: 'Turns by weekday and hour — when the team leans on Claude.',
           draw: (host) => rhythm(host, pulse.rhythm),
           table: () => rhythmTable(pulse.rhythm),
         }));
       const agents = h('div', { class: 'grid', style: 'margin-top:12px' }, chartCard({
-        title: 'Agent share', hint: 'main agent vs subagent types, by estimated cost',
+        title: 'Part par agent', hint: 'main agent vs subagent types, by estimated cost',
         draw: (host) => barList(host, { items: sum.byAgent.map((a) => ({ label: fmt.agent(a.type), v: a.usd, extra: fmt.pct(t.usd ? a.usd / t.usd : 0) })) }),
-        table: () => dataTable({ columns: [{ key: 'type', label: 'Agent', fmt: (r) => fmt.agent(r.type) }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }], rows: sum.byAgent }),
+        table: () => dataTable({ columns: [{ key: 'type', label: 'Agent', fmt: (r) => fmt.agent(r.type) }, { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }], rows: sum.byAgent }),
       }));
       mount([pulseTiles(pulse), tiles, unpriced, spend, people, work, agents]);
+    },
+
+    async spheres() {
+      const d = await api('/api/spheres');
+      const t = d.totals;
+      const span = `${fmt.day(d.range.from)} – ${fmt.day(d.range.to)}`;
+      const top = d.bySphere[0];
+      const keys = d.series.keys;
+      const pct = (x) => fmt.pct(x || 0);
+      const tiles = h('div', { class: 'tiles' },
+        tile({ label: 'Coût estimé (équiv. API)', value: fmt.money(t.usd), hero: true, sub: span }),
+        tile({ label: 'Tokens', value: fmt.tokens(t.tokens), sub: `${fmt.int(t.sessions)} sessions · ${fmt.int(t.prompts)} prompts` }),
+        tile({ label: 'Sphères actives', value: fmt.int(d.bySphere.length), sub: `${fmt.int(d.bySphere.reduce((s, x) => s + x.apps.length, 0))} applications` }),
+        top ? tile({ label: 'Sphère principale', value: top.sphere, sub: `${fmt.money(top.usd)} · ${pct(top.share)} du total` }) : null);
+      const legend = () => h('div', { class: 'legend chipped' }, keys.map((k) => h('span', {}, h('span', { class: 'sw', style: `background:${sphereColor(k)}` }), k)));
+      const pick = (k, v) => { S.filters[k] = v; if (k === 'sphere') S.filters.app = ''; store.set('filters', S.filters); render(); };
+      const rows = [];
+      for (const sp of d.bySphere) {
+        rows.push({ level: 0, sphere: sp.sphere, label: sp.sphere, ...sp });
+        for (const a of sp.apps) rows.push({ level: 1, sphere: sp.sphere, label: a.app, ...a, share: t.usd ? a.usd / t.usd : 0 });
+      }
+      const tree = h('div', { class: 'table-wrap' }, h('table', {},
+        h('thead', {}, h('tr', {}, ['Sphère / application', 'Coût est.', 'Part', 'Tokens', 'Sessions', 'Prompts', 'Type'].map((l, i) => h('th', { class: i && i < 6 ? 'num' : null, text: l })))),
+        h('tbody', {}, rows.length ? rows.map((r) => h('tr', { class: 'clickable', title: r.level ? (r.projs || []).join(', ') : `Filtrer sur ${r.sphere}`, onclick: () => (r.level ? (S.filters.sphere = r.sphere, pick('app', r.label)) : pick('sphere', r.sphere)) },
+          h('td', {}, r.level ? h('span', { style: 'padding-left:22px' }, r.label) : h('span', { style: 'display:inline-flex;align-items:center;gap:6px;font-weight:600' }, h('span', { class: 'sw', style: `background:${sphereColor(r.sphere)}` }), r.label)),
+          h('td', { class: 'num', text: fmt.money(r.usd) }),
+          h('td', { class: 'num', text: pct(r.share) }),
+          h('td', { class: 'num', text: fmt.tokens(r.tokens) }),
+          h('td', { class: 'num', text: fmt.int(r.sessions) }),
+          h('td', { class: 'num', text: fmt.int(r.prompts) }),
+          h('td', { text: r.level ? (r.kinds || []).join(', ') : '' })))
+          : h('tr', {}, h('td', { colspan: 7, class: 'muted', text: 'Rien sur cette période.' })))));
+      mount([
+        tiles,
+        h('div', { class: 'grid' },
+          chartCard({
+            title: 'Coût quotidien par sphère', hint: span, wide: true, top: legend,
+            draw: (host) => stackedColumns(host, { days: d.series.days, keys, color: sphereColor, label: 'Coût estimé quotidien par sphère' }),
+            table: () => dataTable({ columns: [{ key: 'day', label: 'Jour', fmt: (r) => fmt.dayLong(r.day) }, ...keys.map((k) => ({ key: k, label: k, num: true, sort: (r) => r.values[k] || 0, fmt: (r) => fmt.money(r.values[k] || 0) }))], rows: d.series.days, sortKey: 'day', dir: 1 }),
+          }),
+          chartCard({
+            title: 'Répartition par sphère', hint: 'part du coût estimé',
+            draw: (host) => d.bySphere.length ? donut(host, { items: d.bySphere.map((x) => ({ key: x.sphere, label: x.sphere, v: x.usd })), color: sphereColor, label: 'Part de chaque sphère', caption: 'total' }) : host.append(h('div', { class: 'muted', text: 'Rien sur cette période.' })),
+            table: () => dataTable({ columns: [{ key: 'sphere', label: 'Sphère' }, { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'share', label: 'Part', num: true, fmt: (r) => pct(r.share) }], rows: d.bySphere }),
+          }),
+          chartCard({
+            title: "Type d'usage", hint: 'selon tes règles de classement',
+            draw: (host) => barList(host, { items: d.byKind.map((k) => ({ label: k.kind, v: k.usd, extra: pct(k.share) })), empty: 'Rien sur cette période.' }),
+            table: () => dataTable({ columns: [{ key: 'kind', label: 'Type' }, { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }], rows: d.byKind }),
+          }),
+          h('section', { class: 'card wide' },
+            h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Sphères et applications' }), h('div', { class: 'hint', text: 'Clique une ligne pour filtrer tout le tableau de bord sur cette sphère ou cette application.' }))),
+            tree),
+          h('section', { class: 'card wide' },
+            h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Dossiers' }), h('div', { class: 'hint', text: 'Chaque dossier où Claude Code a tourné, et la règle de .tokentaby/spheres.json qui le classe.' }))),
+            dataTable({
+              columns: [
+                { key: 'proj', label: 'Dossier', fmt: (r) => h('span', { class: 'mono', text: r.proj }) },
+                { key: 'sphere', label: 'Sphère' },
+                { key: 'app', label: 'Application' },
+                { key: 'kind', label: 'Type' },
+                { key: 'rule', label: 'Règle', fmt: (r) => (r.rule ? h('span', { class: 'mono', text: r.rule }) : h('span', { class: 'muted', text: '(défaut)' })) },
+                { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) },
+                { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) },
+              ],
+              rows: d.byProj, sortKey: 'usd',
+            }))),
+      ]);
     },
 
     async devs() {
@@ -869,11 +941,11 @@ tbody tr:hover { background: var(--hover); }
         h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Developers' }), h('div', { class: 'hint', text: 'Click a row for the timeline, model mix, tasks and prompt log.' }))),
         dataTable({
           columns: [
-            { key: 'name', label: 'Developer' },
+            { key: 'name', label: 'Développeur' },
             { key: 'sessions', label: 'Sessions', num: true, fmt: (r) => fmt.int(r.sessions) },
             { key: 'prompts', label: 'Prompts', num: true, fmt: (r) => fmt.int(r.prompts) },
             ...tokenCols,
-            { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) },
+            { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) },
             { key: 'favModel', label: 'Favourite model', fmt: (r) => fmt.model(r.favModel) },
             { key: 'subShare', label: 'Subagent share', num: true, title: 'Share of est. cost spent by subagents', fmt: (r) => fmt.pct(r.subShare) },
             { key: 'lastActive', label: 'Last active', fmt: (r) => fmt.when(r.lastActive) },
@@ -895,23 +967,23 @@ tbody tr:hover { background: var(--hover); }
           tile({ label: 'Prompts', value: fmt.int(t.prompts) })),
         h('div', { class: 'grid' },
           chartCard({
-            title: 'Timeline', hint: 'daily estimated cost', wide: true,
+            title: 'Chronologie', hint: 'daily estimated cost', wide: true,
             draw: (host) => stackedColumns(host, { days: d.byDay.map((x) => ({ day: x.day, values: { value: x.usd } })), keys: ['value'], color: () => 'var(--s1)', label: `Daily estimated cost for ${d.name}` }),
-            table: () => dataTable({ columns: [{ key: 'day', label: 'Day', fmt: (r) => fmt.dayLong(r.day) }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }], rows: d.byDay, sortKey: 'day' }),
+            table: () => dataTable({ columns: [{ key: 'day', label: 'Jour', fmt: (r) => fmt.dayLong(r.day) }, { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }], rows: d.byDay, sortKey: 'day' }),
           }),
           chartCard({
-            title: 'Model mix', hint: 'by estimated cost',
-            draw: (host) => byModel.length ? donut(host, { items: byModel.map((m) => ({ key: m.model, label: fmt.model(m.model), v: m.usd })), color: colorOf }) : host.append(h('div', { class: 'muted', text: 'No usage in this range.' })),
-            table: () => dataTable({ columns: [{ key: 'model', label: 'Model', fmt: (r) => fmt.model(r.model) }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }], rows: d.byModel }),
+            title: 'Répartition par modèle', hint: 'by estimated cost',
+            draw: (host) => byModel.length ? donut(host, { items: byModel.map((m) => ({ key: m.model, label: fmt.model(m.model), v: m.usd })), color: colorOf }) : host.append(h('div', { class: 'muted', text: 'Rien sur cette période.' })),
+            table: () => dataTable({ columns: [{ key: 'model', label: 'Modèle', fmt: (r) => fmt.model(r.model) }, { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }], rows: d.byModel }),
           }),
           chartCard({
-            title: 'Main vs subagents', hint: 'by estimated cost',
+            title: 'Principal vs sous-agents', hint: 'by estimated cost',
             draw: (host) => barList(host, { items: d.byAgent.map((a) => ({ label: fmt.agent(a.type), v: a.usd })) }),
-            table: () => dataTable({ columns: [{ key: 'type', label: 'Agent', fmt: (r) => fmt.agent(r.type) }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }], rows: d.byAgent }),
+            table: () => dataTable({ columns: [{ key: 'type', label: 'Agent', fmt: (r) => fmt.agent(r.type) }, { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) }], rows: d.byAgent }),
           }),
-          h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('h2', { text: 'Tasks' })),
-            dataTable({ columns: [{ key: 'task', label: 'Task' }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }, { key: 'prompts', label: 'Prompts', num: true }], rows: d.tasks })),
-          h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Prompt log' }), h('div', { class: 'hint', text: `Latest ${d.prompts.length}; stored as "${S.meta.promptMode}".` }))), promptSessions(d.prompts))),
+          h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('h2', { text: 'Tâches' })),
+            dataTable({ columns: [{ key: 'task', label: 'Tâche' }, { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }, { key: 'prompts', label: 'Prompts', num: true }], rows: d.tasks })),
+          h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Journal des prompts' }), h('div', { class: 'hint', text: `Latest ${d.prompts.length}; stored as "${S.meta.promptMode}".` }))), promptSessions(d.prompts))),
       ]);
     },
 
@@ -920,18 +992,18 @@ tbody tr:hover { background: var(--hover); }
       const s = seriesDays(series);
       mount([h('div', { class: 'grid' },
         chartCard({
-          title: 'Est. cost by model over time', wide: true, hint: 'stacked daily',
+          title: 'Coût estimé par modèle dans le temps', wide: true, hint: 'stacked daily',
           draw: (host) => stackedColumns(host, { days: s.days, keys: s.keys, color: colorOf, label: 'Estimated cost by model per day' }),
           top: () => h('div', {}, modelLegend(s.keys, true), peakLine(s)),
           table: () => seriesTable(s),
         }),
-        h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Models' }), h('div', { class: 'hint', text: 'Which developers, tasks and agents used each model.' }))),
+        h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Modèles' }), h('div', { class: 'hint', text: 'Which developers, tasks and agents used each model.' }))),
           dataTable({
             columns: [
-              { key: 'model', label: 'Model', fmt: (r) => h('span', { style: 'display:inline-flex;align-items:center;gap:6px' }, h('span', { class: 'sw', style: `background:${colorOf(r.model)}` }), fmt.model(r.model)) , sort: (r) => r.model },
-              { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) },
+              { key: 'model', label: 'Modèle', fmt: (r) => h('span', { style: 'display:inline-flex;align-items:center;gap:6px' }, h('span', { class: 'sw', style: `background:${colorOf(r.model)}` }), fmt.model(r.model)) , sort: (r) => r.model },
+              { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) },
               ...tokenCols,
-              { key: 'req', label: 'Requests', num: true, fmt: (r) => fmt.int(r.req) },
+              { key: 'req', label: 'Requêtes', num: true, fmt: (r) => fmt.int(r.req) },
               { key: 'prompts', label: 'Prompts', num: true, title: 'Prompts answered by this model', fmt: (r) => fmt.int(r.prompts) },
               { key: 'devs', label: 'Developers', nosort: true, wrap: true, fmt: (r) => r.devs.slice(0, 6).map((x) => `${x.name} ${fmt.money(x.usd)}`).join(', ') },
               { key: 'tasks', label: 'Top tasks', nosort: true, wrap: true, fmt: (r) => r.tasks.slice(0, 4).map((x) => x.task).join(', ') || '—' },
@@ -946,22 +1018,22 @@ tbody tr:hover { background: var(--hover); }
       const total = a.byType.reduce((s, x) => s + x.usd, 0);
       mount([
         h('div', { class: 'tiles' },
-          tile({ label: 'Subagent overhead', value: fmt.pct(a.overhead), sub: 'share of est. cost spent by subagents' }),
+          tile({ label: 'Surcoût des sous-agents', value: fmt.pct(a.overhead), sub: 'share of est. cost spent by subagents' }),
           tile({ label: 'Sessions using subagents', value: fmt.int(a.totalSessionsWithAgents) }),
           tile({ label: 'Subagents spawned', value: fmt.int(a.byType.filter((x) => x.type !== 'main').reduce((s, x) => s + x.agents, 0)) })),
         h('div', { class: 'grid' },
           chartCard({
-            title: 'Spend by agent type', hint: 'by estimated cost',
+            title: "Coût par type d'agent", hint: 'by estimated cost',
             draw: (host) => barList(host, { items: a.byType.map((x) => ({ label: fmt.agent(x.type), v: x.usd, extra: fmt.pct(total ? x.usd / total : 0) })) }),
             table: () => agentTable(a.byType),
           }),
-          h('section', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Agent types' })), agentTable(a.byType)),
-          h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Subagent overhead per session' }), h('div', { class: 'hint', text: 'Sessions that spawned subagents, most subagent spend first.' }))),
+          h('section', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: "Types d'agents" })), agentTable(a.byType)),
+          h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Surcoût des sous-agents par session' }), h('div', { class: 'hint', text: 'Sessions that spawned subagents, most subagent spend first.' }))),
             dataTable({
               columns: [
-                { key: 'day', label: 'Day', fmt: (r) => fmt.day(r.day) },
-                { key: 'name', label: 'Developer' },
-                { key: 'task', label: 'Task' },
+                { key: 'day', label: 'Jour', fmt: (r) => fmt.day(r.day) },
+                { key: 'name', label: 'Développeur' },
+                { key: 'task', label: 'Tâche' },
                 { key: 'session', label: 'Session', fmt: (r) => h('span', { class: 'mono', text: r.session.slice(0, 8) }) },
                 { key: 'agents', label: 'Subagents', num: true },
                 { key: 'mainUsd', label: 'Main est.', num: true, fmt: (r) => fmt.money(r.mainUsd) },
@@ -979,18 +1051,18 @@ tbody tr:hover { background: var(--hover); }
       const cheapest = named.filter((x) => x.usd > 0).slice().sort((x, y) => x.usd - y.usd).slice(0, 8);
       mount([h('div', { class: 'grid' },
         chartCard({
-          title: 'Priciest tasks', hint: 'by estimated cost',
+          title: 'Tâches les plus chères', hint: 'by estimated cost',
           draw: (host) => barList(host, { items: named.slice(0, 8).map((x) => ({ label: x.task, v: x.usd, extra: `${fmt.int(x.prompts)} prompts` })), empty: 'No task-attributed usage yet.' }),
           table: () => taskTable(named.slice(0, 8)),
         }),
         chartCard({
-          title: 'Cheapest tasks', hint: 'by estimated cost (tasks with any spend)',
+          title: 'Tâches les moins chères', hint: 'by estimated cost (tasks with any spend)',
           draw: (host) => barList(host, { items: cheapest.map((x) => ({ label: x.task, v: x.usd, extra: `${fmt.int(x.prompts)} prompts` })), empty: 'No task-attributed usage yet.' }),
           table: () => taskTable(cheapest),
         }),
-        h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Tasks' }), h('div', { class: 'hint', text: 'Explicit /tokentaby:task → ticket id in the branch name → Claude Code task subject.' }))), taskTable(tasks)),
+        h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Tâches' }), h('div', { class: 'hint', text: 'Explicit /tokentaby:task → ticket id in the branch name → Claude Code task subject.' }))), taskTable(tasks)),
         h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Branches' }), h('div', { class: 'hint', text: 'A branch is usually a PR.' }))),
-          dataTable({ columns: [{ key: 'branch', label: 'Branch' }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }, { key: 'req', label: 'Requests', num: true, fmt: (r) => fmt.int(r.req) }, { key: 'durMs', label: 'Active time', num: true, fmt: (r) => fmt.dur(r.durMs) }], rows: branches }))),
+          dataTable({ columns: [{ key: 'branch', label: 'Branche' }, { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }, { key: 'req', label: 'Requêtes', num: true, fmt: (r) => fmt.int(r.req) }, { key: 'durMs', label: 'Temps actif', num: true, fmt: (r) => fmt.dur(r.durMs) }], rows: branches }))),
       ]);
     },
 
@@ -1005,8 +1077,8 @@ tbody tr:hover { background: var(--hover); }
         mode !== 'full' ? h('div', { class: 'notice' }, mode === 'hash_only' ? 'This repo logs prompts as hashes only: text is never stored, so search matches task ids and hashes.' : `This repo logs the first ${200} characters of each prompt (secrets redacted).`) : null,
         h('div', { class: 'filters' }, input, h('span', { class: 'muted', text: `${fmt.int(data.total)} prompts${data.rolled ? ` (+${fmt.int(data.rolled)} in rolled-up months, counts only)` : ''}` })),
         h('div', { class: 'grid' },
-          chartCard({ title: 'Prompts per task', draw: (host) => barList(host, { items: data.perTask.slice(0, 8).map((x) => ({ label: x.task, v: x.n })), value: fmt.int }), table: () => dataTable({ columns: [{ key: 'task', label: 'Task' }, { key: 'n', label: 'Prompts', num: true }], rows: data.perTask }) }),
-          chartCard({ title: 'Prompts per model', hint: 'model that answered', draw: (host) => barList(host, { items: data.perModel.map((x) => ({ label: fmt.model(x.model), v: x.n })), value: fmt.int }), table: () => dataTable({ columns: [{ key: 'model', label: 'Model', fmt: (r) => fmt.model(r.model) }, { key: 'n', label: 'Prompts', num: true }], rows: data.perModel }) }),
+          chartCard({ title: 'Prompts per task', draw: (host) => barList(host, { items: data.perTask.slice(0, 8).map((x) => ({ label: x.task, v: x.n })), value: fmt.int }), table: () => dataTable({ columns: [{ key: 'task', label: 'Tâche' }, { key: 'n', label: 'Prompts', num: true }], rows: data.perTask }) }),
+          chartCard({ title: 'Prompts per model', hint: 'model that answered', draw: (host) => barList(host, { items: data.perModel.map((x) => ({ label: fmt.model(x.model), v: x.n })), value: fmt.int }), table: () => dataTable({ columns: [{ key: 'model', label: 'Modèle', fmt: (r) => fmt.model(r.model) }, { key: 'n', label: 'Prompts', num: true }], rows: data.perModel }) }),
           h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('h2', { text: 'Log by session' })), promptSessions(data.items))),
       ]);
       requestAnimationFrame(() => { if (q) { input.focus(); input.setSelectionRange(q.length, q.length); } });
@@ -1093,22 +1165,22 @@ tbody tr:hover { background: var(--hover); }
   };
 
   function agentTable(rows) {
-    return dataTable({ columns: [{ key: 'type', label: 'Agent', fmt: (r) => fmt.agent(r.type) }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }, { key: 'req', label: 'Requests', num: true, fmt: (r) => fmt.int(r.req) }, { key: 'agents', label: 'Spawned', num: true, fmt: (r) => (r.type === 'main' ? '—' : fmt.int(r.agents)) }, { key: 'sessions', label: 'Sessions', num: true }], rows });
+    return dataTable({ columns: [{ key: 'type', label: 'Agent', fmt: (r) => fmt.agent(r.type) }, { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }, { key: 'req', label: 'Requêtes', num: true, fmt: (r) => fmt.int(r.req) }, { key: 'agents', label: 'Spawned', num: true, fmt: (r) => (r.type === 'main' ? '—' : fmt.int(r.agents)) }, { key: 'sessions', label: 'Sessions', num: true }], rows });
   }
 
   function taskTable(rows) {
     return dataTable({
       columns: [
-        { key: 'task', label: 'Task' },
+        { key: 'task', label: 'Tâche' },
         { key: 'title', label: 'Title', fmt: (r) => r.title || '' },
         { key: 'status', label: 'Status', fmt: (r) => r.status || '' },
-        { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) },
+        { key: 'usd', label: 'Coût est.', num: true, fmt: (r) => fmt.money(r.usd) },
         { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) },
         { key: 'prompts', label: 'Prompts', num: true },
         { key: 'sessions', label: 'Sessions', num: true },
-        { key: 'models', label: 'Models', nosort: true, fmt: (r) => r.models.map((m) => fmt.model(m.model)).join(', ') },
+        { key: 'models', label: 'Modèles', nosort: true, fmt: (r) => r.models.map((m) => fmt.model(m.model)).join(', ') },
         { key: 'devs', label: 'Developers', nosort: true, fmt: (r) => r.devs.map((d) => d.name).join(', ') },
-        { key: 'durMs', label: 'Active time', num: true, fmt: (r) => fmt.dur(r.durMs) },
+        { key: 'durMs', label: 'Temps actif', num: true, fmt: (r) => fmt.dur(r.durMs) },
         { key: 'last', label: 'Last activity', fmt: (r) => fmt.when(r.last) },
       ],
       rows, sortKey: 'usd',
@@ -1175,7 +1247,9 @@ tbody tr:hover { background: var(--hover); }
   }
 
   // ------------------------------------------------------------ chrome
-  const TABS = [['overview', 'Overview'], ['devs', 'Developers'], ['models', 'Models'], ['agents', 'Agents'], ['tasks', 'Tasks'], ['prompts', 'Prompts'], ['settings', 'Settings']];
+  const ALL_TABS = [['overview', "Vue d'ensemble"], ['spheres', 'Sphères'], ['devs', 'Développeurs'], ['models', 'Modèles'], ['agents', 'Agents'], ['tasks', 'Tâches'], ['prompts', 'Prompts'], ['settings', 'Réglages']];
+  // l'onglet Sphères n'a de sens qu'en mode hub ; « Développeurs » seulement à plusieurs
+  const TABS_FOR = () => ALL_TABS.filter(([k]) => (k !== 'spheres' || (S.meta && S.meta.hub)) && (k !== 'devs' || !S.meta || S.meta.devs.length > 1));
 
   function route() {
     const parts = (location.hash.replace(/^#\/?/, '') || 'overview').split('/');
@@ -1184,24 +1258,32 @@ tbody tr:hover { background: var(--hover); }
 
   function renderTabs() {
     const r = route();
-    $('#tabs').replaceChildren(...TABS.map(([k, label]) => h('a', { href: '#/' + k, 'aria-current': r.page === k || (k === 'devs' && r.page === 'devs') ? 'page' : null }, label)));
+    $('#tabs').replaceChildren(...TABS_FOR().map(([k, label]) => h('a', { href: '#/' + k, 'aria-current': r.page === k || (k === 'devs' && r.page === 'devs') ? 'page' : null }, label)));
   }
 
   function renderFilters() {
     const f = S.filters;
     const save = () => { store.set('filters', S.filters); render(); };
     const sel = (label, value, options, onchange) => h('label', {}, label, h('select', { onchange: (e) => onchange(e.target.value) }, options.map(([v, l]) => h('option', { value: v, selected: v === value ? true : null }, l))));
-    const devs = [['', 'All developers'], ...S.meta.devs.map((d) => [d.id, d.name])];
-    const models = [['', 'All models'], ...S.meta.models.map((m) => [m, fmt.model(m)])];
-    const ranges = [['month', 'This month'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days'], ['90d', 'Last 90 days'], ['all', 'All time'], ['custom', 'Custom…']];
+    const devs = [['', 'Tous'], ...S.meta.devs.map((d) => [d.id, d.name])];
+    const models = [['', 'Tous les modèles'], ...S.meta.models.map((m) => [m, fmt.model(m)])];
+    const ranges = [['month', 'Ce mois-ci'], ['7d', '7 derniers jours'], ['30d', '30 derniers jours'], ['90d', '90 derniers jours'], ['all', 'Depuis le début'], ['custom', 'Personnalisée…']];
+    const hub = !!S.meta.hub;
+    const spheres = [['', 'Toutes'], ...(S.meta.spheres || []).map((x) => [x, x])];
+    const apps = [['', 'Toutes'], ...(S.meta.apps || []).filter((a) => !f.sphere || a.sphere === f.sphere).map((a) => [a.app, f.sphere ? a.app : `${a.app} (${a.sphere})`])];
+    const kinds = [['', 'Tous'], ...(S.meta.kinds || []).map((x) => [x, x])];
     const kids = [
-      sel('Range', f.range, ranges, (v) => { f.range = v; save(); }),
-      f.range === 'custom' ? h('input', { type: 'date', value: range().from, 'aria-label': 'From', onchange: (e) => { f.from = e.target.value; save(); } }) : null,
-      f.range === 'custom' ? h('input', { type: 'date', value: range().to, 'aria-label': 'To', onchange: (e) => { f.to = e.target.value; save(); } }) : null,
-      sel('Developer', f.dev, devs, (v) => { f.dev = v; save(); }),
-      sel('Model', f.model, models, (v) => { f.model = v; save(); }),
-      sel('Prices', f.prices, [['logged', 'as logged'], ['current', 'current table']], (v) => { f.prices = v; save(); }),
-      currencies().length > 1 ? sel('Currency', currency(), currencies().map((c) => [c, c]), (v) => { S.currency = v; store.set('currency', v); render(); }) : null,
+      sel('Période', f.range, ranges, (v) => { f.range = v; save(); }),
+      f.range === 'custom' ? h('input', { type: 'date', value: range().from, 'aria-label': 'Du', onchange: (e) => { f.from = e.target.value; save(); } }) : null,
+      f.range === 'custom' ? h('input', { type: 'date', value: range().to, 'aria-label': 'Au', onchange: (e) => { f.to = e.target.value; save(); } }) : null,
+      hub ? sel('Sphère', f.sphere, spheres, (v) => { f.sphere = v; f.app = ''; save(); }) : null,
+      hub ? sel('Application', f.app, apps, (v) => { f.app = v; save(); }) : null,
+      hub ? sel('Type', f.kind, kinds, (v) => { f.kind = v; save(); }) : null,
+      S.meta.devs.length > 1 ? sel('Développeur', f.dev, devs, (v) => { f.dev = v; save(); }) : null,
+      sel('Modèle', f.model, models, (v) => { f.model = v; save(); }),
+      sel('Prix', f.prices, [['logged', 'au moment de l\'usage'], ['current', 'table actuelle']], (v) => { f.prices = v; save(); }),
+      currencies().length > 1 ? sel('Devise', currency(), currencies().map((c) => [c, c]), (v) => { S.currency = v; store.set('currency', v); render(); }) : null,
+      (f.sphere || f.app || f.kind || f.model || f.dev) ? h('button', { class: 'iconbtn', type: 'button', onclick: () => { Object.assign(f, { sphere: '', app: '', kind: '', model: '', dev: '' }); save(); } }, 'Effacer les filtres') : null,
     ];
     $('#filters').replaceChildren(...kids.filter(Boolean));
   }
@@ -1230,7 +1312,7 @@ tbody tr:hover { background: var(--hover); }
   function applyTheme(t) {
     if (t === 'auto') document.documentElement.removeAttribute('data-theme');
     else document.documentElement.setAttribute('data-theme', t);
-    $('#theme').textContent = { auto: 'Auto', light: 'Light', dark: 'Dark' }[t];
+    $('#theme').textContent = { auto: 'Auto', light: 'Clair', dark: 'Sombre' }[t];
   }
   let theme = store.get('theme', 'auto');
   applyTheme(theme);

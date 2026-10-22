@@ -15,7 +15,8 @@ const { resolveConfig, PROMPT_MODES, SYNC_MODES } = require('../lib/config');
 const { loadPricing } = require('../lib/pricing');
 const { createServer, openDataset } = require('../lib/server');
 const { exportFile, EXPORT_COLUMNS } = require('../lib/api');
-const { backfill } = require('../lib/backfill');
+const { backfill, backfillAll } = require('../lib/backfill');
+const hub = require('../lib/hub');
 const { buildSnapshot } = require('../lib/snapshot');
 const otel = require('../lib/otel');
 
@@ -36,7 +37,7 @@ Usage: tokentaby <command> [options]
   sync                        commit your queued usage now (manual/auto-commit modes)
   status                      what is tracked, queued and configured in this clone
   query <view> [filters]      JSON for scripts and Claude: summary periods devs
-                              dev <id> models agents tasks prompts events
+                              dev <id> models agents tasks prompts spheres events
   export [--kind K] [--format csv|json] [--out FILE]
                               K = turns (default) prompts devs tasks models
   rollup [--before YYYY-MM] [--drop-prompts] [--dry-run]
@@ -50,12 +51,18 @@ Usage: tokentaby <command> [options]
                               import this repo's past Claude Code sessions
   snapshot [--out FILE] [--no-prompts]
                               write the dashboard as one offline HTML file
+  hub init <DOSSIER> [--push] [--prompt-mode MODE]
+                              crée ton hub central (un seul dépôt pour tout ton usage)
+  hub rules                   montre comment chaque dossier est classé (sphère/app/type)
+  hub sync                    pousse le hub vers GitHub maintenant (pull --rebase + push)
+  hub where                   affiche le hub utilisé
   commands                    list the /tokentaby: slash commands (what /tokentaby:help shows)
   precommit                   git pre-commit hook entry (installed by init)
 
 Options:  --repo PATH  --json  --data-dir DIR (plugin data folder; the slash commands pass it)
 Filters:  --from YYYY-MM-DD --to YYYY-MM-DD --dev ID --model ID --task ID
           --agent TYPE --branch NAME --q TEXT --prices current
+          --sphere NOM --app NOM --kind TYPE  (mode hub)
 Modes:    --sync ${SYNC_MODES.join('|')}   --prompt-mode ${PROMPT_MODES.join('|')}
 `;
 
@@ -82,11 +89,11 @@ function parseArgs(argv) {
   return out;
 }
 
-const VALUE_FLAGS = new Set(['repo', 'port', 'from', 'to', 'dev', 'model', 'task', 'agent', 'branch', 'q', 'prices', 'sync', 'promptMode', 'kind', 'format', 'out', 'before', 'base', 'head', 'limit', 'dataDir', 'source', 'projectDir', 'since', 'report']);
+const VALUE_FLAGS = new Set(['repo', 'port', 'from', 'to', 'dev', 'model', 'task', 'agent', 'branch', 'q', 'prices', 'sync', 'promptMode', 'kind', 'format', 'out', 'before', 'base', 'head', 'limit', 'dataDir', 'source', 'projectDir', 'since', 'report', 'sphere', 'app', 'kind']);
 
 function filters(a) {
   const f = {};
-  for (const k of ['from', 'to', 'dev', 'model', 'task', 'agent', 'branch', 'q']) if (typeof a[k] === 'string') f[k] = a[k];
+  for (const k of ['from', 'to', 'dev', 'model', 'task', 'agent', 'branch', 'q', 'sphere', 'app', 'kind']) if (typeof a[k] === 'string') f[k] = a[k];
   if (a.prices === 'current') f.reprice = true;
   if (a.limit) f.limit = parseInt(a.limit, 10);
   return f;
@@ -95,7 +102,9 @@ function filters(a) {
 class UsageError extends Error {}
 
 function needRepo(a, { initialized = true } = {}) {
-  const repo = git.findRepo(typeof a.repo === 'string' ? a.repo : process.cwd());
+  // mode hub : sans --repo, toutes les commandes lisent le dépôt central
+  const central = typeof a.repo === 'string' ? null : hub.hubRepo();
+  const repo = central || git.findRepo(typeof a.repo === 'string' ? a.repo : process.cwd());
   if (!repo) throw new UsageError('not inside a git repository');
   if (initialized && !store.isInitialized(repo.root)) {
     throw new UsageError(`tokentaby is not set up in ${repo.root}\nRun /tokentaby:init in Claude Code (or tokentaby init in a terminal)`);
@@ -155,7 +164,7 @@ const commands = {
   /** The slash commands, read from commands/*.md so this list never drifts from what is installed. */
   commands() {
     const dir = path.join(ROOT, 'commands');
-    const order = ['usage', 'init', 'backfill', 'task', 'dashboard', 'snapshot', 'sync', 'status', 'help'];
+    const order = ['usage', 'hub', 'init', 'backfill', 'task', 'dashboard', 'snapshot', 'sync', 'status', 'help'];
     const names = fs
       .readdirSync(dir)
       .filter((f) => f.endsWith('.md'))
@@ -184,15 +193,31 @@ const commands = {
     if (a.json) return print(p);
     const fx = loadPricing(repo.root).fx;
     const money = (v) => fmtMoney(v, cfg, fx);
-    const rows = [['', p.me ? `you (${p.me})` : 'you', 'est. cost', 'prompts', 'team tokens', 'est. cost', 'prompts', 'sessions', 'devs']];
-    for (const [label, k] of [['today', 'today'], ['this week', 'week'], ['this month', 'month']]) {
+    const fr = ds.hasProj;
+    const rows = fr
+      ? [['', 'tokens', 'coût est.', 'prompts', 'sessions']]
+      : [['', p.me ? `you (${p.me})` : 'you', 'est. cost', 'prompts', 'team tokens', 'est. cost', 'prompts', 'sessions', 'devs']];
+    for (const [label, k] of fr ? [["aujourd'hui", 'today'], ['cette semaine', 'week'], ['ce mois-ci', 'month']] : [['today', 'today'], ['this week', 'week'], ['this month', 'month']]) {
+      if (fr) {
+        const x = p[k].team;
+        rows.push([label, fmtTokens(x.tokens), money(x.usd), x.prompts, x.sessions]);
+        continue;
+      }
       const x = p[k];
       const mine = x.me ? [fmtTokens(x.me.tokens), money(x.me.usd), x.me.prompts] : ['—', '—', '—'];
       rows.push([label, ...mine, fmtTokens(x.team.tokens), money(x.team.usd), x.team.prompts, x.team.sessions, x.team.devs]);
     }
     const s = ds.summary({ ...filters(a) });
     const topTask = s.topTasks[0];
-    const lines = [
+    const lines = fr ? [
+      `tokentaby · hub ${path.basename(repo.root)} · coût estimé en équivalent API (abonnement : ce n'est pas une facture)`,
+      '',
+      table(rows),
+      '',
+      `Modèle le plus utilisé ce mois-ci : ${p.month.topModel || '—'}`,
+      `En file, pas encore commité : ${queuedCount(repo)} événements · prompts : ${cfg.prompt_mode}`,
+      'Tableau de bord : /tokentaby:dashboard  (ou tokentaby serve dans un terminal)',
+    ] : [
       `tokentaby · ${path.basename(repo.root)} · estimated API-equivalent cost (subscription usage, not a bill)`,
       '',
       table(rows),
@@ -201,6 +226,14 @@ const commands = {
       `Queued, not yet committed: ${queuedCount(repo)} events · sync: ${cfg.sync} · prompts: ${cfg.prompt_mode}`,
       p.me ? 'Dashboard: /tokentaby:dashboard  (or tokentaby serve in a terminal)' : 'Your own usage is not logged until you choose a developer id: set dev_id in /plugin → tokentaby.',
     ];
+    if (ds.hasProj) {
+      const sp = ds.spheres(filters(a));
+      if (sp.bySphere.length) {
+        const rowsS = [['ce mois-ci par sphère', 'coût est.', 'part', 'tokens', 'sessions', 'top application']];
+        for (const x of sp.bySphere) rowsS.push([x.sphere, money(x.usd), `${Math.round(x.share * 100)} %`, fmtTokens(x.tokens), x.sessions, x.apps[0] ? x.apps[0].app : '—']);
+        lines.splice(3, 0, '', table(rowsS));
+      }
+    }
     process.stdout.write(lines.join('\n') + '\n');
   },
 
@@ -349,6 +382,7 @@ const commands = {
       agents: () => ds.agents(f),
       tasks: () => ds.tasks(f),
       prompts: () => ds.promptLog(f),
+      spheres: () => ds.spheres(f),
       events: () => store.readAllEvents(repo),
     };
     if (!views[view]) throw new UsageError(`unknown view "${view}" — one of: ${Object.keys(views).join(', ')}`);
@@ -421,6 +455,19 @@ const commands = {
   backfill(a) {
     const repo = needRepo(a);
     if (a.since && !/^\d{4}-\d{2}-\d{2}$/.test(a.since)) throw new UsageError('--since must be YYYY-MM-DD');
+    // mode hub : tout l'historique de ~/.claude/projects/, tous dossiers confondus
+    if (hub.hubRepo() && path.resolve(hub.hubRepo().root) === path.resolve(repo.root) && !a.source && !a.projectDir) {
+      const t = backfillAll(repo, { since: a.since, dryRun: !!a.dryRun });
+      if (a.json) return print(t);
+      const errs = t.details.filter((d) => d.error);
+      return print(
+        `${a.dryRun ? 'Importerait' : 'Importé'} ${t.imported} sessions sur ${t.sessions}, depuis ${t.dirs} dossiers de projet` +
+          (a.dryRun ? '' : ` (${t.turnRows} lignes de tours, ${t.prompts} prompts)`) +
+          `.\n${t.alreadyTracked} déjà suivies, ${t.skipped} ignorées (règle "ignore" ou --since).` +
+          (errs.length ? `\n${errs.length} dossier(s) illisible(s) : ${errs.map((e) => e.dir).join(', ')}` : '') +
+          (a.dryRun ? '' : '\nLes événements sont en file ; tokentaby sync puis tokentaby hub sync pour les envoyer sur GitHub.')
+      );
+    }
     const r = backfill(repo, {
       source: typeof a.source === 'string' ? a.source : undefined,
       dir: typeof a.projectDir === 'string' ? a.projectDir : undefined,
@@ -447,6 +494,75 @@ const commands = {
 
   precommit() {
     process.exitCode = sync.precommit(process.cwd());
+  },
+
+  /** Mode hub : un dépôt central pour tout ton usage Claude Code. */
+  hub(a) {
+    const sub = a._[1] || 'where';
+    if (sub === 'init') {
+      const target = a._[2] ? hub.expand(a._[2]) : hub.hubDir();
+      if (!target) throw new UsageError('usage : tokentaby hub init <dossier>   (ex. ~/dev/tokentaby-data)');
+      if (a.promptMode && !PROMPT_MODES.includes(a.promptMode)) throw new UsageError(`--prompt-mode doit être l'un de ${PROMPT_MODES.join(', ')}`);
+      fs.mkdirSync(target, { recursive: true });
+      let repo = git.findRepo(target);
+      if (!repo || path.resolve(repo.root) !== path.resolve(target)) {
+        const r = git.git(['init', '-q', '-b', 'main'], target);
+        if (!r.ok) git.git(['init', '-q'], target);
+        repo = git.findRepo(target);
+      }
+      const res = sync.init(repo, { sync: 'auto-commit', promptMode: a.promptMode || 'truncated' });
+      const cfgFile = path.join(store.tokentabyDir(repo.root), 'config.json');
+      const cfg = store.readJson(cfgFile, {});
+      cfg.hub = true;
+      cfg.push = !!a.push || !!cfg.push;
+      cfg.currency = cfg.currency || 'CAD';
+      fs.writeFileSync(cfgFile, JSON.stringify(cfg, null, 2) + '\n');
+      const rulesFile = path.join(store.tokentabyDir(repo.root), 'spheres.json');
+      if (!fs.existsSync(rulesFile)) fs.copyFileSync(path.join(ROOT, 'templates', 'spheres.json'), rulesFile);
+      const readme = path.join(repo.root, 'README.md');
+      if (!fs.existsSync(readme)) fs.copyFileSync(path.join(ROOT, 'templates', 'hub-README.md'), readme);
+      fs.writeFileSync(hub.POINTER(), repo.root + '\n');
+      const state = store.readState(repo);
+      const dev = store.devIdFor(resolveConfig(repo.root, state.options), state);
+      store.writeState(repo, { ...(dev ? { dev } : {}), plugin_root: ROOT, version: VERSION });
+      return print(
+        [
+          `Hub prêt : ${repo.root}`,
+          res.created.length ? res.created.map((f) => `  + ${f}`).join('\n') : '  (fichiers déjà présents)',
+          `  pointeur : ${hub.POINTER()} → ce dossier (la CLI et les hooks le trouvent tout seuls)`,
+          `  envoi automatique vers GitHub en fin de session : ${cfg.push ? 'oui' : 'non (ajoute --push pour l\'activer)'}`,
+          '',
+          'Ensuite :',
+          `  1. Ajuste tes règles de classement : ${rulesFile}`,
+          '  2. Importe ton historique :        tokentaby backfill',
+          '  3. Vérifie le classement :         tokentaby hub rules',
+          `  4. Relie-le à GitHub (repo PRIVÉ) : cd "${repo.root}" && git add -A && git commit -m "init hub" && git remote add origin git@github.com:<toi>/tokentaby-data.git && git push -u origin main`,
+        ].join('\n')
+      );
+    }
+    const repo = hub.hubRepo();
+    if (!repo) throw new UsageError(`aucun hub configuré ou initialisé${hub.hubDir() ? ` (${hub.hubDir()})` : ''} — lance : tokentaby hub init ~/dev/tokentaby-data`);
+    if (sub === 'where') return print(a.json ? { hub: repo.root, pointer: hub.POINTER() } : `Hub : ${repo.root}`);
+    if (sub === 'sync') {
+      needRepo({ ...a, repo: repo.root });
+      const c = sync.commitUsage(repo);
+      const r = hub.syncNow(repo);
+      if (a.json) return print({ commit: c, push: r });
+      print(`${c.committed ? `Commit : ${c.message}` : `Pas de nouveau commit (${c.reason})`}\n${r.ok ? 'Envoyé sur GitHub.' : `Pas envoyé : ${r.reason}`}`);
+      if (!r.ok) process.exitCode = 1;
+      return;
+    }
+    if (sub === 'rules') {
+      needRepo({ ...a, repo: repo.root });
+      const { ds } = dataset(repo);
+      const sp = ds.spheres({ ...filters(a), from: a.from || ds.span().first || undefined });
+      if (a.json) return print(sp.byProj);
+      if (!sp.byProj.length) return print('Aucun usage enregistré pour l\'instant.');
+      const rows = [['dossier', 'sphère', 'application', 'type', 'règle', 'coût est. (USD)']];
+      for (const x of sp.byProj) rows.push([x.proj, x.sphere, x.app, x.kind, x.rule || '(défaut)', x.usd.toFixed(2)]);
+      return print(`Classement de tout l'historique (règles : ${path.join(store.tokentabyDir(repo.root), 'spheres.json')})\n\n${table(rows)}`);
+    }
+    throw new UsageError(`sous-commande inconnue "${sub}" — init, rules, sync ou where`);
   },
 
 };

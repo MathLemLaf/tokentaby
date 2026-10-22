@@ -345,7 +345,7 @@ test('dashboard API serves the data on loopback', async (t) => {
     assert.match(page.body, /<title>tokentaby<\/title>/);
     const meta = JSON.parse((await get('/api/meta')).body);
     assert.equal(meta.me, 'sami');
-    assert.deepEqual(Object.keys(meta.fx).sort(), ['EUR', 'INR', 'USD']);
+    assert.deepEqual(Object.keys(meta.fx).sort(), ['CAD', 'EUR', 'INR', 'USD']);
     const sum = JSON.parse((await get('/api/summary?from=2026-10-01&to=2026-10-31')).body);
     assert.ok(sum.totals.usd > 0);
     for (const p of ['/api/pulse', '/api/devs', '/api/devs/sami', '/api/models', '/api/agents', '/api/tasks', '/api/prompts?q=task', '/api/export.csv?kind=devs']) {

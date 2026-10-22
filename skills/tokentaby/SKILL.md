@@ -1,6 +1,6 @@
 ---
 name: tokentaby
-description: Answer questions about this repo's Claude Code usage and estimated cost from tokentaby's logs — e.g. "what did TKT-142 cost?", "who used the most Opus this week?", "how much do subagents add?", "which tasks were cheapest?", "what has the team been asking Claude?".
+description: Answer questions about Claude Code usage (this repo, or in hub mode ALL of the user's folders by sphere / application / type) — e.g. "combien m'a coûté la sphère Investissement ce mois-ci ?", "quelle application consomme le plus ?", and estimated cost from tokentaby's logs — e.g. "what did TKT-142 cost?", "who used the most Opus this week?", "how much do subagents add?", "which tasks were cheapest?", "what has the team been asking Claude?".
 allowed-tools: Bash(node "${CLAUDE_PLUGIN_ROOT}/scripts/tokentaby.js" query:*)
 ---
 
@@ -22,15 +22,22 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/tokentaby.js" query <view> [filters]
 | `agents` | spend by agent type (main vs Explore, Plan, custom…) and subagent overhead per session |
 | `tasks` | per task and per branch: cost, tokens, prompts, models, devs, active time |
 | `prompts` | the prompt log (respects the repo's prompt mode); `--q TEXT` searches text, task id or hash |
+| `spheres` | mode hub : coût par sphère → applications, par type d'usage, par dossier, et série quotidienne par sphère |
 | `events` | raw events, for anything the views do not cover |
 
-Filters: `--from YYYY-MM-DD --to YYYY-MM-DD --dev ID --model ID --task ID --agent TYPE --branch NAME --q TEXT`. Add `--prices current` to re-cost history with today's pricing table instead of the price logged at the time. `summary` defaults to the current month; most other views default to all time — pass a range when the question names one.
+Filters: `--from YYYY-MM-DD --to YYYY-MM-DD --dev ID --model ID --task ID --agent TYPE --branch NAME --q TEXT`, and in hub mode `--sphere NOM --app NOM --kind TYPE` (they work with every view). Add `--prices current` to re-cost history with today's pricing table instead of the price logged at the time. `summary` defaults to the current month; most other views default to all time — pass a range when the question names one.
 
 Examples:
 
 - "What did TKT-142 cost?" → `query tasks --task TKT-142`
 - "Who used the most Opus this week?" → `query devs --model claude-opus-5-5 --from <monday> --to <today>`
 - "How much do subagents add?" → `query agents`
+- « Combien m'a coûté la généalogie ce mois-ci ? » → `query summary --sphere Généalogie`
+- « Quelle application consomme le plus ? » → `query spheres --from <date> --to <today>`
+
+## Mode hub (cette version)
+
+When a hub is configured (`~/.tokentaby-hub`), every view reads ONE central repo holding all of the user's Claude Code usage, from every folder. Each event carries `proj` (the project folder, e.g. `~/dev/genealogie`), classified at read time by `.tokentaby/spheres.json` into a sphere, an application and a type. To change how a folder is classified, edit that file (first matching rule wins) and check with `tokentaby hub rules`. The user is French-speaking: answer in French.
 
 ## How to answer
 

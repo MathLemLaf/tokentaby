@@ -20,6 +20,7 @@ const { resolveConfig, userOptions } = require('../lib/config');
 const { loadPricing, cost, round } = require('../lib/pricing');
 const { redact } = require('../lib/secrets');
 const { resolveTask, parseTaskCommand } = require('../lib/tasks');
+const hub = require('../lib/hub');
 
 const PLUGIN_ROOT = process.env.CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, '..');
 
@@ -63,9 +64,13 @@ function context(p) {
   const session = p.session_id;
   if (!session) return null;
   const saved = store.readSession(session);
+  // mode hub : tout va dans le dépôt central, étiqueté avec le dossier du projet
+  const hubbed = hub.resolve(saved.projDir || p.cwd || process.cwd());
+  if (hubbed && hubbed.ignored) return null;
   // the repo is pinned at SessionStart so a `cd` mid-session cannot split the data
-  const repo = git.findRepo(saved.repoRoot || p.cwd || process.cwd());
+  const repo = hubbed ? hubbed.repo : git.findRepo(saved.repoRoot || p.cwd || process.cwd());
   if (!repo || !store.isInitialized(repo.root)) return null;
+  const branchRepo = hubbed ? hubbed.projRepo : repo;
   const state = store.readState(repo);
   const cfg = resolveConfig(repo.root, state.options);
   // inside a hook, only the option value Claude Code passes right now counts
@@ -81,7 +86,9 @@ function context(p) {
     dev,
     now: new Date().toISOString(),
     transcript: p.transcript_path || saved.transcript || null,
-    branch: git.currentBranch(repo),
+    hub: !!hubbed,
+    projDir: hubbed ? hubbed.projDir : null,
+    branch: branchRepo ? git.currentBranch(branchRepo) : null,
     pricing: () => pricing || (pricing = loadPricing(repo.root)),
     task(branch) {
       return resolveTask({ session: store.readSession(session), clone: state.task, branch: branch || this.branch });
@@ -182,13 +189,15 @@ function agentTypeFor(ctx, agentId, file, hinted) {
 
 function onSessionStart(ctx) {
   const { p, repo } = ctx;
-  store.writeSession(ctx.session, { repoRoot: repo.root, transcript: ctx.transcript, started: ctx.now, source: p.source || null });
+  store.writeSession(ctx.session, { repoRoot: repo.root, projDir: ctx.projDir, transcript: ctx.transcript, started: ctx.now, source: p.source || null });
   // identity + plugin location for the git hook and the CLI (they run outside Claude)
   const dev = ctx.dev;
   const state = store.writeState(repo, { dev, plugin_root: PLUGIN_ROOT, version: pluginVersion(), options: userOptions(), data_dir: store.dataDir(), last_session: ctx.now });
   // install the git hook, or refresh a block an older plugin version wrote (no-op when current)
   debug('hook', git.installPreCommit(repo));
-  const cwdRel = path.relative(repo.root, p.cwd || repo.root).split(path.sep).join('/') || '.';
+  const cwdRel = ctx.hub
+    ? path.relative(ctx.projDir, p.cwd || ctx.projDir).split(path.sep).join('/') || '.'
+    : path.relative(repo.root, p.cwd || repo.root).split(path.sep).join('/') || '.';
   store.appendEvents(repo, [
     {
       t: 'session',
@@ -210,8 +219,10 @@ function onSessionStart(ctx) {
     store.writeState(repo, { notice_shown: ctx.now });
     process.stdout.write(
       JSON.stringify({
-        systemMessage:
-          `tokentaby: Claude Code usage in this repo is logged to .tokentaby/devs/${dev}/ ` +
+        systemMessage: ctx.hub
+          ? `tokentaby : l'usage de Claude Code est enregistré dans ton hub central (${repo.root}), étiqueté par dossier ` +
+            `(prompts : ${ctx.cfg.prompt_mode}). /tokentaby:usage pour un résumé, /tokentaby:dashboard pour le tableau de bord.`
+          : `tokentaby: Claude Code usage in this repo is logged to .tokentaby/devs/${dev}/ ` +
           `(prompts: ${ctx.cfg.prompt_mode}, sync: ${ctx.cfg.sync}). See .tokentaby/README.md. Run /tokentaby:usage for a summary.`,
       }) + '\n'
     );
@@ -323,7 +334,12 @@ function onSessionEnd(ctx) {
   store.appendEvents(ctx.repo, [
     { t: 'session', ts: ctx.now, dev: ctx.dev, session: ctx.session, event: 'end', reason: ctx.p.reason || null },
   ]);
-  if (ctx.cfg.sync === 'auto-commit') debug('auto-commit', sync.commitUsage(ctx.repo, { dev: ctx.dev }));
+  if (ctx.cfg.sync === 'auto-commit') {
+    const res = sync.commitUsage(ctx.repo, { dev: ctx.dev });
+    debug('auto-commit', res);
+    // mode hub : le dépôt de données est à toi seul, on peut le pousser vers GitHub
+    if (ctx.hub && ctx.cfg.team.push && res.committed) debug('push', hub.pushAsync(ctx.repo));
+  }
 }
 
 const HANDLERS = {

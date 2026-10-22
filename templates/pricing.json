@@ -9,9 +9,10 @@
     "fast_mult": 2,
     "web_search_per_1k": 10
   },
-  "fx_source": "ECB euro reference rates of 2026-10-21, crossed to USD. Units of currency per 1 USD; display conversion only.",
+  "fx_source": "ECB euro reference rates of 2026-10-21, crossed to USD; CAD: USD/CAD mid rate of 2026-10-21. Units of currency per 1 USD; display conversion only.",
   "fx": {
     "USD": 1,
+    "CAD": 1.4063,
     "INR": 94.47,
     "EUR": 0.8902
   },
