@@ -285,7 +285,7 @@ test('snapshot is a self-contained dashboard whose in-page API answers every vie
   ctx.window = ctx;
   vm.runInContext(scripts[0], ctx);
   vm.runInContext(scripts[1], ctx);
-  return Promise.all(['/api/meta', '/api/summary', '/api/devs', '/api/models', '/api/agents', '/api/tasks', '/api/prompts'].map((p) => ctx.tokentabyLocal(p, { from: '2026-10-01', to: '2026-10-31' }))).then(([meta, sum]) => {
+  return Promise.all(['/api/meta', '/api/summary', '/api/pulse', '/api/devs', '/api/models', '/api/agents', '/api/tasks', '/api/prompts'].map((p) => ctx.tokentabyLocal(p, { from: '2026-10-01', to: '2026-10-31' }))).then(([meta, sum]) => {
     assert.equal(meta.me, 'sami');
     assert.ok(meta.snapshot.generated);
     assert.ok(sum.totals.usd > 0);
@@ -348,7 +348,7 @@ test('dashboard API serves the data on loopback', async (t) => {
     assert.deepEqual(Object.keys(meta.fx).sort(), ['EUR', 'INR', 'USD']);
     const sum = JSON.parse((await get('/api/summary?from=2026-10-01&to=2026-10-31')).body);
     assert.ok(sum.totals.usd > 0);
-    for (const p of ['/api/devs', '/api/devs/sami', '/api/models', '/api/agents', '/api/tasks', '/api/prompts?q=task', '/api/export.csv?kind=devs']) {
+    for (const p of ['/api/pulse', '/api/devs', '/api/devs/sami', '/api/models', '/api/agents', '/api/tasks', '/api/prompts?q=task', '/api/export.csv?kind=devs']) {
       assert.equal((await get(p)).status, 200, p);
     }
     assert.equal((await get('/api/meta', 'evil.example:80')).status, 421, 'DNS-rebinding guard');

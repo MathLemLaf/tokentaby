@@ -8,6 +8,102 @@ tokentaby is a Claude Code plugin that records every turn in a repository: token
 
 > **Costs are estimates.** Teams on Claude Pro / Max / Team subscriptions don't pay per token. tokentaby prices tokens at Anthropic's API list prices ("API-equivalent") for comparison and budgeting, never as a bill.
 
+<p align="center">
+  <a href="#-screenshots"><strong>Screenshots</strong></a> ·
+  <a href="#quick-start"><strong>Quick start</strong></a> ·
+  <a href="#the-dashboard"><strong>Dashboard</strong></a> ·
+  <a href="#how-syncing-works-and-how-the-team-sees-it"><strong>Team sync</strong></a> ·
+  <a href="#privacy"><strong>Privacy</strong></a>
+</p>
+
+<p align="center">
+  <img src="assets/screenshots/overview.png" alt="tokentaby dashboard overview: today, this week, forecast and developer cards above a stacked daily-spend-by-model chart" width="900" />
+</p>
+
+---
+
+## 📸 Screenshots
+
+*All screenshots use generated demo data: five developers, four models, 30 days.*
+
+### Overview
+
+<p align="center">
+  <img src="assets/screenshots/overview.png" alt="Overview page in dark mode" width="900" />
+</p>
+
+> Headline cards for today (vs yesterday), this week (vs the same days last week), a straight-line forecast for the month and active developers, then daily spend stacked by model with the peak day called out. **Show data table** puts every value in a table under the chart.
+
+<br />
+
+### Cost profile by developer · Model mix
+
+<p align="center">
+  <img src="assets/screenshots/developers-models.png" alt="Cost profile by developer table and model mix donut" width="900" />
+</p>
+
+> Deliberately not a leaderboard: each bar is a developer's spend, its inner segment the part that went to the frontier model, next to turns, cache hit rate and the trend against the previous period. The donut shows each model's share of estimated cost.
+
+<br />
+
+### Cost by task · Working rhythm
+
+<p align="center">
+  <img src="assets/screenshots/tasks-rhythm.png" alt="Cost by task table and weekday by hour heatmap" width="900" />
+</p>
+
+> Every turn knows its ticket, so each task shows its status, the models and developers on it, sessions, turns, cache reads and cost. The heatmap shows turns by weekday and hour, with the peak hour and the share of work outside 07–22.
+
+<br />
+
+### Developer detail
+
+<p align="center">
+  <img src="assets/screenshots/developer.png" alt="One developer's timeline, model mix, agent split and tasks" width="900" />
+</p>
+
+> Click any developer for their daily timeline, model mix, main agent vs subagents, the tasks they worked on and their prompt log.
+
+<br />
+
+### Models
+
+<p align="center">
+  <img src="assets/screenshots/models.png" alt="Estimated cost by model over time and the per-model table" width="900" />
+</p>
+
+> Cost by model over time, and which developers, tasks and agents used each model.
+
+<br />
+
+### Tasks
+
+<p align="center">
+  <img src="assets/screenshots/tasks.png" alt="Priciest and cheapest tasks, the task table and branches" width="900" />
+</p>
+
+> Priciest vs cheapest tasks, every task with its title and status, and spend per branch (usually a PR).
+
+<br />
+
+### Prompts
+
+<p align="center">
+  <img src="assets/screenshots/prompts.png" alt="Searchable prompt log grouped by session" width="900" />
+</p>
+
+> A searchable prompt log grouped by session, with prompts per task and per model. It follows the repo's prompt mode: full, truncated, or hashes only.
+
+<br />
+
+### Light mode
+
+<p align="center">
+  <img src="assets/screenshots/overview-light.png" alt="Overview page in light mode" width="900" />
+</p>
+
+> Light and dark themes follow your system, or pick one with the button in the top right.
+
 ---
 
 ## What you get
@@ -226,7 +322,7 @@ A single-file local web app with no build step and no CDN, so it works offline. 
 
 | Page | Shows |
 |---|---|
-| **Overview** | team total and estimated cost for the range (vs the previous period), 30-day trend, daily cost by model, model share, agent share, top 5 developers and tasks |
+| **Overview** | headline cards (today vs yesterday, this week vs the same days last week, a straight-line forecast for the month, active developers); the range total with its 30-day trend; daily spend by model with the peak day; a **cost profile by developer** (spend, the share that went to the frontier model, turns, cache hit rate, trend vs the previous period); model mix; **cost by task** (status, models, developers, sessions, turns, cache reads); the team's **working rhythm** as a weekday × hour heatmap; agent share |
 | **Developers** | sessions, prompts, tokens by type, cost, favourite model, subagent share. Click a developer for their timeline, model mix, tasks and prompt log |
 | **Models** | cost by model over time; which developers, tasks and agents used each model; prompts answered |
 | **Agents** | spend by agent type, subagent overhead per session |
@@ -234,11 +330,11 @@ A single-file local web app with no build step and no CDN, so it works offline. 
 | **Prompts** | searchable log grouped by session (respects the prompt mode) |
 | **Settings** | pricing-table editor, developer names, CSV/JSON export |
 
-Filters (date range, developer, model, logged vs current prices, currency) apply to every chart and table. Each chart has a table view. Light and dark themes are included.
+Filters (date range, developer, model, logged vs current prices, currency) apply to every chart and table. Every chart has a **Show data table** button that puts its values in a table underneath, and every table sorts by any column. Light and dark themes are included.
 
 **Currencies:** estimates are computed in USD and can be shown in **USD (default), INR or EUR**, the currencies Claude bills subscriptions in. Rates live in the `fx` table of `.tokentaby/pricing.json`, and the team can update them.
 
-**JSON API** (for Sheets, Grafana or scripts): `GET /api/summary?from=&to=`, `/api/devs`, `/api/devs/<id>`, `/api/models`, `/api/agents`, `/api/tasks`, `/api/prompts?q=`, `/api/events`, `/api/export.csv?kind=turns|prompts|devs|tasks|models`. All accept `from`, `to`, `dev`, `model` and `prices=current`.
+**JSON API** (for Sheets, Grafana or scripts): `GET /api/summary?from=&to=`, `/api/pulse` (headline cards, developer profile, working rhythm), `/api/devs`, `/api/devs/<id>`, `/api/models`, `/api/agents`, `/api/tasks`, `/api/prompts?q=`, `/api/events`, `/api/export.csv?kind=turns|prompts|devs|tasks|models`. All accept `from`, `to`, `dev`, `model` and `prices=current`.
 
 ---
 

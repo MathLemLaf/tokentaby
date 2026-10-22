@@ -113,3 +113,23 @@ test('csv export escapes values', () => {
   assert.equal(toCsv([{ a: 'x,y', b: 'say "hi"' }], ['a', 'b']), 'a,b\n"x,y","say ""hi"""\n');
   assert.equal(dayOf('not a date'), null);
 });
+
+test('pulse: headline cards, cost profile per developer, working rhythm', () => {
+  const p = ds().pulse({ to: '2026-10-21' });
+  assert.equal(p.cards.today.usd, 4);
+  assert.equal(p.cards.today.prev, 3.5, 'yesterday');
+  assert.equal(p.cards.week.usd, 7.5, 'Mon 19 Oct to Wed 21 Oct');
+  assert.equal(p.cards.week.days, 3);
+  assert.equal(p.cards.week.prev, 0, 'Mon 12 to Wed 14 Oct');
+  assert.ok(Math.abs(p.cards.forecast.usd - (7.5 / 21) * 31) < 0.01, 'straight-line month');
+  assert.equal(p.cards.devs.n, 2);
+  const [rafi, sami] = p.profile;
+  assert.equal(rafi.name, 'Rafi H.');
+  assert.equal(rafi.frontierShare, 1, 'all of it on Opus');
+  assert.ok(Math.abs(sami.frontierShare - 2 / 3.5) < 0.001);
+  assert.ok(Math.abs(sami.cacheHit - 3000 / 3030) < 0.001, 'cache reads over all input');
+  assert.equal(sami.turns, 3);
+  assert.equal(p.rhythm.turns, 4, 'main-agent turns only');
+  assert.equal(p.rhythm.grid.flat().reduce((a, b) => a + b, 0), 4);
+  assert.equal(p.rhythm.grid.length, 7);
+});

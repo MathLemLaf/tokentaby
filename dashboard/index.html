@@ -22,6 +22,13 @@
   --critical: #d03b3b;
   --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
   --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --other: #898781;
+  --good: #0b7350; --warn: #8a5800; --up: #b42f2f;
+  --frontier: var(--s7); --rest: var(--s1);
+  --heat-0: var(--surface-2);
+  --heat-1: color-mix(in srgb, var(--accent) 25%, var(--surface-2));
+  --heat-2: color-mix(in srgb, var(--accent) 48%, var(--surface-2));
+  --heat-3: color-mix(in srgb, var(--accent) 72%, var(--surface-2));
+  --heat-4: var(--accent);
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
@@ -32,6 +39,7 @@
     --accent: #3987e5; --wash: rgba(57, 135, 229, 0.14); --hover: rgba(255, 255, 255, 0.05);
     --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
     --s5: #d55181; --s6: #008300; --s7: #9085e9;
+    --good: #2fbf8a; --warn: #e0a526; --up: #f07a7a;
   }
 }
 :root[data-theme="dark"] {
@@ -42,6 +50,7 @@
   --accent: #3987e5; --wash: rgba(57, 135, 229, 0.14); --hover: rgba(255, 255, 255, 0.05);
   --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
   --s5: #d55181; --s6: #008300; --s7: #9085e9;
+  --good: #2fbf8a; --warn: #e0a526; --up: #f07a7a;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -89,7 +98,7 @@ main.loading { opacity: .55; pointer-events: none; }
 .card-head h2 { font-size: 15px; margin: 0; font-weight: 600; }
 .card-head .hint { color: var(--muted); font-size: 12px; margin-top: 2px; }
 .card-head .spacer { flex: 1; }
-.toggle { font-size: 12px; border: 1px solid var(--border); background: transparent; border-radius: 6px; padding: 2px 8px; cursor: pointer; color: var(--ink-2); }
+.toggle { font-size: 12px; border: 1px solid var(--border); background: transparent; border-radius: 6px; padding: 2px 8px; cursor: pointer; color: var(--ink-2); white-space: nowrap; flex: none; }
 .toggle:hover { background: var(--hover); }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: 12px; color: var(--ink-2); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -145,10 +154,60 @@ tbody tr:hover { background: var(--hover); }
 .edit-table td { padding: 4px 6px; }
 .back { display: inline-block; margin: 4px 0 10px; color: var(--ink-2); text-decoration: none; }
 .back:hover { color: var(--ink); }
-.donut-wrap { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-.donut-wrap .legend { flex-direction: column; margin-top: 0; min-width: 0; flex: 1; }
-.donut-wrap .legend span { justify-content: space-between; gap: 12px; }
-.donut-wrap .legend .lv { font-variant-numeric: tabular-nums; color: var(--ink); }
+.donut-wrap { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.donut-wrap svg { flex: none; }
+.dlegend { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 10px 14px; align-items: center; flex: 1; min-width: 200px; font-size: 13px; }
+.dlegend .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dlegend .v { text-align: right; font-variant-numeric: tabular-nums; }
+.dlegend .p { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.sw.dot { border-radius: 50%; }
+/* headline cards */
+.kpi .kpi-head { display: flex; align-items: center; gap: 8px; }
+.kpi .label { font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); flex: 1; }
+.kpi .value { font-size: 30px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.kpi.hot { border-color: var(--accent); background: linear-gradient(160deg, var(--wash), var(--surface) 70%); }
+.badge { font-size: 11px; border-radius: 999px; padding: 1px 8px; background: var(--surface-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.badge.up, .trend.up { color: var(--up); }
+.badge.down, .trend.down { color: var(--good); }
+.trend { font-size: 11px; font-variant-numeric: tabular-nums; }
+/* legend chips above a chart */
+.legend.chipped { margin: 0 0 10px; gap: 6px; }
+.legend.chipped > span { border: 1px solid var(--border); border-radius: 999px; padding: 2px 10px; background: var(--surface-2); color: var(--ink); }
+.peak { color: var(--muted); font-size: 12px; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+.under { margin-top: 12px; }
+.under .table-wrap { max-height: 320px; overflow: auto; border: 1px solid var(--border); border-radius: 10px; }
+.split { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 12px; margin-top: 12px; }
+@media (max-width: 900px) { .split { grid-template-columns: minmax(0, 1fr); } }
+/* cost profile by developer */
+.who { display: flex; align-items: center; gap: 10px; min-width: 150px; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: grid; place-items: center; font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink-2); flex: none; }
+.who .id { color: var(--muted); font-size: 12px; }
+.spend { display: flex; align-items: center; gap: 10px; min-width: 180px; }
+.spend .track { flex: 1; height: 8px; border-radius: 4px; background: var(--surface-2); position: relative; overflow: hidden; }
+.spend .all { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--rest); overflow: hidden; }
+.spend .front { position: absolute; left: 0; top: 0; bottom: 0; background: var(--frontier); border-right: 2px solid var(--surface); }
+.spend .pv { width: 34px; text-align: right; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.cost-cell { display: flex; flex-direction: column; align-items: flex-end; }
+.foot { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; margin-top: 10px; font-size: 12px; color: var(--ink-2); }
+.foot span { display: inline-flex; align-items: center; gap: 6px; }
+/* cost by task */
+.task-id { display: flex; align-items: center; gap: 8px; }
+.task-title { color: var(--ink-2); font-size: 12px; white-space: normal; max-width: 280px; }
+.status { font-size: 11px; border-radius: 4px; padding: 0 6px; background: var(--surface-2); }
+.status.done { color: var(--good); }
+.status.open { color: var(--warn); }
+.dots { display: inline-flex; align-items: center; gap: 4px; }
+.dots .sw { width: 10px; height: 10px; border-radius: 3px; }
+.dots .muted { margin-left: 4px; font-size: 12px; }
+/* working rhythm */
+.heat { display: grid; grid-template-columns: 30px repeat(24, minmax(0, 1fr)); gap: 3px; align-items: center; max-width: 520px; }
+.heat .hl { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.heat .dl { font-size: 11px; color: var(--ink-2); }
+.heat .c { aspect-ratio: 1; border-radius: 3px; background: var(--heat-0); }
+.heat .c:hover { outline: 2px solid var(--ink-2); outline-offset: -1px; }
+.heat-legend { display: flex; align-items: center; gap: 4px; margin-top: 12px; font-size: 12px; color: var(--ink-2); }
+.heat-legend .c { width: 12px; height: 12px; border-radius: 3px; }
+.heat-legend .gap { width: 12px; }
 </style>
 </head>
 <body>
@@ -215,6 +274,7 @@ tbody tr:hover { background: var(--hover); }
   const dayOf = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const today = () => dayOf(new Date());
   const addDays = (day, n) => { const [y, m, d] = day.split('-').map(Number); return dayOf(new Date(y, m - 1, d + n)); };
+  const dayRange = (from, to) => { const out = []; for (let d = from; d <= to && out.length < 3700; d = addDays(d, 1)) out.push(d); return out; };
 
   function range() {
     const t = today();
@@ -457,11 +517,11 @@ tbody tr:hover { background: var(--hover); }
   }
 
   /** Part-to-whole at a glance (<= 8 segments incl. Other), legend with values. */
-  function donut(host, { items, color, value = fmt.money, label }) {
+  function donut(host, { items, color, value = fmt.money, label, caption = 'total' }) {
     const total = items.reduce((s, i) => s + i.v, 0);
-    const size = 156;
-    const r = 70;
-    const inner = 46;
+    const size = 168;
+    const r = 80;
+    const inner = 62;
     const svg = svgEl('svg', { viewBox: `0 0 ${size} ${size}`, width: size, height: size, role: 'img', 'aria-label': label || 'share' });
     const cx = size / 2;
     let a0 = -Math.PI / 2;
@@ -482,14 +542,16 @@ tbody tr:hover { background: var(--hover); }
       hover(p, () => [it.label, [tipRow(color(it.key), value(it.v), fmt.pct(it.v / total))]]);
       a0 = a1;
     }
-    const t1 = svgEl('text', { x: cx, y: cx - 2, 'text-anchor': 'middle', style: 'font-size:15px;font-weight:600;fill:var(--ink)' }, svg);
-    t1.textContent = value(total);
-    const t2 = svgEl('text', { x: cx, y: cx + 14, 'text-anchor': 'middle' }, svg);
-    t2.textContent = 'total';
-    const legend = h('div', { class: 'legend' },
-      items.map((it) => h('span', {},
-        h('span', { style: 'display:inline-flex;align-items:center;gap:6px;min-width:0' }, h('span', { class: 'sw', style: `background:${color(it.key)}` }), h('span', { text: it.label })),
-        h('span', { class: 'lv', text: `${value(it.v)} · ${fmt.pct(total ? it.v / total : 0)}` }))));
+    const t1 = svgEl('text', { x: cx, y: cx + 3, 'text-anchor': 'middle', style: 'font-size:20px;font-weight:650;fill:var(--ink)' }, svg);
+    t1.textContent = value === fmt.money ? fmt.moneyShort(total) : value(total);
+    const t2 = svgEl('text', { x: cx, y: cx + 20, 'text-anchor': 'middle' }, svg);
+    t2.textContent = caption;
+    const legend = h('div', { class: 'dlegend' },
+      items.map((it) => [
+        h('span', { class: 'sw dot', style: `background:${color(it.key)}` }),
+        h('span', { class: 'n', title: it.label, text: it.label }),
+        h('span', { class: 'v', text: value(it.v) }),
+        h('span', { class: 'p', text: fmt.pct(total ? it.v / total : 0) })]));
     host.replaceChildren(h('div', { class: 'donut-wrap' }, svg, legend));
   }
 
@@ -504,9 +566,8 @@ tbody tr:hover { background: var(--hover); }
   }
 
   /** Sortable table. columns: [{ key, label, num, fmt(row) -> string|Node, sort(row) }] */
-  function dataTable({ columns, rows, sortKey, onRow, empty = 'Nothing in this range.' }) {
+  function dataTable({ columns, rows, sortKey, dir = -1, onRow, empty = 'Nothing in this range.' }) {
     let key = sortKey || (columns.find((c) => c.num) || columns[0]).key;
-    let dir = -1;
     const wrap = h('div', { class: 'table-wrap' });
     const render = () => {
       const col = columns.find((c) => c.key === key) || columns[0];
@@ -536,30 +597,180 @@ tbody tr:hover { background: var(--hover); }
     return wrap;
   }
 
-  /** A card whose chart has a table-view twin (values reachable without hover). */
-  function chartCard({ title, hint, wide, draw, table, legend }) {
+  /** A card whose chart has a data-table twin shown under it (values reachable without hover). */
+  function chartCard({ title, hint, wide, draw, table, legend, top }) {
     const body = h('div', {});
-    let asTable = false;
-    const btn = table ? h('button', { class: 'toggle', type: 'button', onclick: () => { asTable = !asTable; paint(); } }, 'Table') : null;
+    let withTable = false;
+    const btn = table ? h('button', { class: 'toggle', type: 'button', 'aria-expanded': 'false', onclick: () => { withTable = !withTable; paint(); } }) : null;
     const card = h('section', { class: 'card' + (wide ? ' wide' : '') },
       h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: title }), hint ? h('div', { class: 'hint', text: hint }) : null), h('span', { class: 'spacer' }), btn), body);
     function paint() {
-      if (btn) btn.textContent = asTable ? 'Chart' : 'Table';
-      if (asTable) body.replaceChildren(table());
-      else {
-        body.replaceChildren();
-        const host = h('div', {});
-        body.append(host);
-        draw(host);
-        if (legend) body.append(legend());
+      if (btn) {
+        btn.textContent = withTable ? 'Hide data table' : 'Show data table';
+        btn.setAttribute('aria-expanded', String(withTable));
       }
+      body.replaceChildren();
+      if (top) body.append(top());
+      const host = h('div', {});
+      body.append(host);
+      draw(host);
+      if (legend) body.append(legend());
+      if (withTable) body.append(h('div', { class: 'under' }, table()));
     }
     card.paint = paint;
     return card;
   }
 
-  function modelLegend(models) {
-    return h('div', { class: 'legend' }, models.map((m) => h('span', {}, h('span', { class: 'sw', style: `background:${colorOf(m)}` }), fmt.model(m))));
+  function modelLegend(models, chipped) {
+    return h('div', { class: 'legend' + (chipped ? ' chipped' : '') }, models.map((m) => h('span', {}, h('span', { class: 'sw', style: `background:${colorOf(m)}` }), fmt.model(m))));
+  }
+
+  /** Day-by-model table under a stacked chart, with a total column. */
+  function seriesTable(s) {
+    const total = (r) => s.keys.reduce((a, k) => a + (r.values[k] || 0), 0);
+    return dataTable({
+      columns: [
+        { key: 'day', label: 'Day', fmt: (r) => fmt.dayLong(r.day) },
+        ...s.keys.map((k) => ({ key: k, label: fmt.model(k), num: true, sort: (r) => r.values[k] || 0, fmt: (r) => fmt.money(r.values[k] || 0) })),
+        { key: 'total', label: 'Total', num: true, sort: total, fmt: (r) => fmt.money(total(r)) },
+      ],
+      rows: s.days, sortKey: 'day', dir: 1,
+    });
+  }
+
+  function peakLine(s) {
+    let best = null;
+    for (const d of s.days) {
+      const v = s.keys.reduce((a, k) => a + (d.values[k] || 0), 0);
+      if (v > 0 && (!best || v > best.v)) best = { day: d.day, v };
+    }
+    return h('div', { class: 'peak', text: best ? `Peak ${fmt.day(best.day)} · ${fmt.money(best.v, 2)}` : 'No spend in this range' });
+  }
+
+  // ------------------------------------------------------------ overview pieces
+  function change(cur, prev, what) {
+    if (!prev) return null;
+    const d = (cur - prev) / prev;
+    if (Math.abs(d) < 0.005) return h('span', { class: 'badge', title: `Same as ${what}`, text: '±0%' });
+    return h('span', { class: 'badge ' + (d > 0 ? 'up' : 'down'), title: `Estimated cost ${d > 0 ? 'up' : 'down'} ${fmt.pct(Math.abs(d))} on ${what}`, text: `${d > 0 ? '▲' : '▼'} ${fmt.pct(Math.abs(d))}` });
+  }
+
+  function kpi({ label, value, sub, badge, hot }) {
+    return h('div', { class: 'tile kpi' + (hot ? ' hot' : '') },
+      h('div', { class: 'kpi-head' }, h('span', { class: 'label', text: label }), badge),
+      h('div', { class: 'value', text: value }),
+      sub ? h('div', { class: 'sub', text: sub }) : null);
+  }
+
+  function pulseTiles(p) {
+    const c = p.cards;
+    const f = c.forecast;
+    return h('div', { class: 'tiles' },
+      kpi({ label: 'Today', value: fmt.money(c.today.usd, 2), sub: c.today.prev ? 'vs yesterday' : 'nothing logged yesterday', badge: change(c.today.usd, c.today.prev, 'yesterday'), hot: true }),
+      kpi({ label: 'This week', value: fmt.money(c.week.usd, 2), sub: c.week.prev ? `vs the same ${c.week.days === 1 ? 'day' : `${c.week.days} days`} last week` : 'nothing logged last week', badge: change(c.week.usd, c.week.prev, 'the same days last week') }),
+      kpi({ label: 'Forecast', value: fmt.money(f.usd), sub: `This month, straight-line from ${fmt.money(f.mtd)} over ${f.elapsed} ${f.elapsed === 1 ? 'day' : 'days'}` }),
+      kpi({ label: 'Developers', value: fmt.int(c.devs.n), sub: c.devs.n === c.devs.all ? 'All logging into one repo' : `active this month · ${fmt.int(c.devs.all)} all time` }));
+  }
+
+  const initials = (name) => {
+    const w = String(name || '?').trim().split(/[\s._-]+/).filter(Boolean);
+    return (w.length > 1 ? w[0][0] + w[1][0] : (w[0] || '?').slice(0, 2)).toUpperCase();
+  };
+
+  function trendText(x) {
+    if (x == null) return h('span', { class: 'trend muted', text: 'new' });
+    if (Math.abs(x) < 0.005) return h('span', { class: 'trend muted', text: '±0%' });
+    return h('span', { class: 'trend ' + (x > 0 ? 'up' : 'down'), text: `${x > 0 ? '+' : '−'}${fmt.pct(Math.abs(x))}` });
+  }
+
+  /** Spend per developer with the frontier-model share inside the bar: a profile, not a leaderboard. */
+  function devProfile(p) {
+    const max = Math.max(0, ...p.profile.map((d) => d.usd)) || 1;
+    const table = dataTable({
+      columns: [
+        { key: 'name', label: 'Developer', fmt: (r) => h('a', { class: 'who', href: devLink(r.dev), style: 'text-decoration:none' }, h('span', { class: 'avatar', 'aria-hidden': 'true', text: initials(r.name) }), h('span', {}, h('div', { text: r.name }), r.name !== r.dev ? h('div', { class: 'id mono', text: r.dev }) : null)) },
+        {
+          key: 'frontierShare', label: 'Share of spend', title: 'Bar length: spend. Inner segment: the part that went to the frontier model.',
+          fmt: (r) => {
+            const bar = h('span', { class: 'spend', tabindex: 0, 'aria-label': `${r.name}: ${fmt.money(r.usd)}, ${fmt.pct(r.frontierShare)} on the frontier model` },
+              h('span', { class: 'track' }, h('span', { class: 'all', style: `width:${(r.usd / max) * 100}%` }, h('span', { class: 'front', style: `width:${r.frontierShare * 100}%` }))),
+              h('span', { class: 'pv', text: fmt.pct(r.frontierShare) }));
+            hover(bar, () => [r.name, [
+              tipRow('var(--frontier)', fmt.money(r.frontierUsd), 'frontier model'),
+              tipRow('var(--rest)', fmt.money(r.usd - r.frontierUsd), 'everything else'),
+              tipRow(null, fmt.pct(r.share), 'of team spend'),
+            ]]);
+            return bar;
+          },
+        },
+        { key: 'turns', label: 'Turns', num: true, fmt: (r) => fmt.int(r.turns) },
+        { key: 'cacheHit', label: 'Cache hit', num: true, title: 'Cache reads as a share of all input tokens', fmt: (r) => fmt.pct(r.cacheHit) },
+        { key: 'usd', label: 'Cost', num: true, fmt: (r) => h('span', { class: 'cost-cell' }, h('span', { text: fmt.money(r.usd, 2) }), trendText(r.trend)) },
+      ],
+      rows: p.profile, sortKey: 'usd', empty: 'No usage in this range.',
+    });
+    return h('div', {}, table, h('div', { class: 'foot' },
+      h('span', {}, h('span', { class: 'sw', style: 'background:var(--frontier)' }), 'Frontier model'),
+      h('span', {}, h('span', { class: 'sw', style: 'background:var(--rest)' }), 'Everything else'),
+      h('span', { class: 'muted', text: `Trend is against the previous ${p.range.days} days.` })));
+  }
+
+  /** Named tasks with status, the models and people on them, and what they cost. */
+  function taskCost(tasks) {
+    const rows = tasks.filter((x) => x.task !== '(none)');
+    if (!rows.length) return h('div', { class: 'muted', text: 'No task-attributed usage yet. Name branches like feat/TKT-142-… or run /tokentaby:task TKT-142.' });
+    return dataTable({
+      columns: [
+        { key: 'task', label: 'Task', fmt: (r) => h('div', {}, h('div', { class: 'task-id' }, h('span', { text: r.task }), r.status ? h('span', { class: `status ${r.status}`, text: r.status }) : null), r.title ? h('div', { class: 'task-title', text: r.title }) : null) },
+        {
+          key: 'models', label: 'Models', sort: (r) => r.devs.length,
+          fmt: (r) => h('span', { class: 'dots', title: r.models.map((m) => fmt.model(m.model)).join(', ') },
+            r.models.slice(0, 6).map((m) => h('span', { class: 'sw', style: `background:${colorOf(m.model)}` })),
+            h('span', { class: 'muted', text: `${r.devs.length} ${r.devs.length === 1 ? 'dev' : 'devs'}` })),
+        },
+        { key: 'sessions', label: 'Sessions', num: true, fmt: (r) => fmt.int(r.sessions) },
+        { key: 'turns', label: 'Turns', num: true, fmt: (r) => fmt.int(r.turns) },
+        { key: 'cr', label: 'Cache read', num: true, fmt: (r) => fmt.tokens(r.cr) },
+        { key: 'usd', label: 'Cost', num: true, fmt: (r) => h('b', { text: fmt.money(r.usd, 2) }) },
+      ],
+      rows: rows.slice(0, 10), sortKey: 'usd',
+    });
+  }
+
+  const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const hourOf = (hr) => `${pad(hr)}:00`;
+
+  /** Weekday x hour heatmap of main-agent turns, one sequential hue. */
+  function rhythm(host, r) {
+    const max = Math.max(0, ...r.grid.flat());
+    const level = (v) => (v ? Math.max(1, Math.ceil((v / max) * 4)) : 0);
+    const cells = [h('span', {})];
+    for (let hr = 0; hr < 24; hr++) cells.push(h('span', { class: 'hl', text: hr % 6 === 0 ? String(hr) : '' }));
+    r.grid.forEach((row, d) => {
+      cells.push(h('span', { class: 'dl', text: DAYS[d] }));
+      row.forEach((v, hr) => {
+        const c = h('span', { class: 'c', style: `background:var(--heat-${level(v)})` });
+        hover(c, () => [`${DAYS[d]} ${hourOf(hr)}–${hourOf((hr + 1) % 24)}`, [tipRow(null, fmt.int(v), v === 1 ? 'turn' : 'turns')]]);
+        cells.push(c);
+      });
+    });
+    host.replaceChildren(
+      h('div', { class: 'peak', text: r.turns ? `Peak hour ${hourOf(r.peakHour)} · ${fmt.pct(r.offHours)} outside 07–22` : 'No turns in this range' }),
+      h('div', { class: 'heat', role: 'img', 'aria-label': `Turns by weekday and hour; ${r.turns ? `busiest at ${hourOf(r.peakHour)}` : 'empty'}. Show the data table for the values.` }, cells),
+      h('div', { class: 'heat-legend' }, 'Quiet', h('span', { class: 'gap' }), [0, 1, 2, 3, 4].map((l) => h('span', { class: 'c', style: `background:var(--heat-${l})` })), h('span', { class: 'gap' }), 'Busy', h('span', { class: 'gap' }), h('span', { class: 'muted', text: `${fmt.int(r.turns)} turns` })));
+  }
+
+  function rhythmTable(r) {
+    return dataTable({
+      columns: [
+        { key: 'day', label: 'Day', sort: (x) => x.i },
+        { key: 'total', label: 'Turns', num: true, fmt: (x) => fmt.int(x.total) },
+        { key: 'peak', label: 'Busiest hour', sort: (x) => x.peak, fmt: (x) => (x.total ? hourOf(x.peak) : '—') },
+        ...Array.from({ length: 24 }, (_, hr) => ({ key: 'h' + hr, label: pad(hr), num: true, sort: (x) => x.row[hr], fmt: (x) => x.row[hr] || '' })),
+      ],
+      rows: r.grid.map((row, i) => ({ i, day: DAYS[i], row, total: row.reduce((a, b) => a + b, 0), peak: row.indexOf(Math.max(...row)) })),
+      sortKey: 'day', dir: 1,
+    });
   }
 
   function tile({ label, value, sub, hero, trend }) {
@@ -581,7 +792,7 @@ tbody tr:hover { background: var(--hover); }
   /** Mount nodes, then draw charts once they have a measured width. */
   function mount(nodes) {
     const main = $('#main');
-    main.replaceChildren(...nodes);
+    main.replaceChildren(...nodes.filter(Boolean));
     requestAnimationFrame(() => {
       main.querySelectorAll('.tile').forEach((t) => t.drawTrend && t.drawTrend());
       main.querySelectorAll('.card').forEach((c) => c.paint && c.paint());
@@ -605,7 +816,7 @@ tbody tr:hover { background: var(--hover); }
   // ------------------------------------------------------------ pages
   const pages = {
     async overview() {
-      const [sum, models] = await Promise.all([api('/api/summary'), api('/api/models')]);
+      const [sum, models, pulse, tasks] = await Promise.all([api('/api/summary'), api('/api/models'), api('/api/pulse'), api('/api/tasks')]);
       const t = sum.totals;
       const p = sum.prev;
       const me = sum.me;
@@ -618,34 +829,38 @@ tbody tr:hover { background: var(--hover); }
       const unpriced = t.unpricedTokens ? h('div', { class: 'notice' }, `${fmt.tokens(t.unpricedTokens)} tokens came from models missing in the pricing table and are not costed. Add them under Settings → Pricing.`) : null;
       const series = seriesDays(models.series);
       const byModel = foldModels(sum.byModel);
-      const cards = h('div', { class: 'grid' },
+      const days = dayRange(sum.range.from, sum.range.to);
+      const span = `${fmt.day(sum.range.from)} – ${fmt.day(sum.range.to)}`;
+      const spend = h('div', { class: 'grid' }, chartCard({
+        title: 'Daily spend by model', hint: span, wide: true,
+        top: () => h('div', {}, modelLegend(series.keys, true), peakLine(series)),
+        draw: (host) => stackedColumns(host, { days: series.days, keys: series.keys, color: colorOf, label: 'Daily estimated cost by model' }),
+        table: () => seriesTable(series),
+      }));
+      const people = h('div', { class: 'split' },
+        h('section', { class: 'card' },
+          h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Cost profile by developer' }), h('div', { class: 'hint', text: 'Deliberately not a leaderboard: the bar shows spend, the inner segment shows how much of it went to the frontier model.' }))),
+          devProfile(pulse)),
         chartCard({
-          title: 'Daily est. cost by model', hint: `${fmt.day(sum.range.from)} – ${fmt.day(sum.range.to)}`, wide: true,
-          draw: (host) => stackedColumns(host, { days: series.days, keys: series.keys, color: colorOf, label: 'Daily estimated cost by model' }),
-          legend: () => modelLegend(series.keys),
-          table: () => dataTable({ columns: [{ key: 'day', label: 'Day', fmt: (r) => fmt.dayLong(r.day) }, ...series.keys.map((k) => ({ key: k, label: fmt.model(k), num: true, sort: (r) => r.values[k] || 0, fmt: (r) => fmt.money(r.values[k] || 0) }))], rows: series.days, sortKey: 'day' }),
-        }),
-        chartCard({
-          title: 'Model share', hint: 'by estimated cost',
-          draw: (host) => byModel.length ? donut(host, { items: byModel.map((m) => ({ key: m.model, label: fmt.model(m.model), v: m.usd })), color: colorOf, label: 'Model share by estimated cost' }) : host.append(h('div', { class: 'muted', text: 'No usage in this range.' })),
+          title: 'Model mix', hint: `Share of estimated cost, ${span}.`,
+          draw: (host) => byModel.length ? donut(host, { items: byModel.map((m) => ({ key: m.model, label: fmt.model(m.model), v: m.usd })), color: colorOf, label: 'Model share by estimated cost', caption: `${days.length}-day total` }) : host.append(h('div', { class: 'muted', text: 'No usage in this range.' })),
           table: () => dataTable({ columns: [{ key: 'model', label: 'Model', fmt: (r) => fmt.model(r.model) }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }, { key: 'req', label: 'Requests', num: true, fmt: (r) => fmt.int(r.req) }], rows: sum.byModel }),
-        }),
-        chartCard({
-          title: 'Agent share', hint: 'main agent vs subagent types, by estimated cost',
-          draw: (host) => barList(host, { items: sum.byAgent.map((a) => ({ label: fmt.agent(a.type), v: a.usd, extra: fmt.pct(t.usd ? a.usd / t.usd : 0) })) }),
-          table: () => dataTable({ columns: [{ key: 'type', label: 'Agent', fmt: (r) => fmt.agent(r.type) }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }], rows: sum.byAgent }),
-        }),
-        chartCard({
-          title: 'Top developers', hint: 'by estimated cost',
-          draw: (host) => barList(host, { items: sum.topDevs.map((d) => ({ label: d.name, v: d.usd, href: devLink(d.dev) })) }),
-          table: () => dataTable({ columns: [{ key: 'name', label: 'Developer' }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }], rows: sum.topDevs }),
-        }),
-        chartCard({
-          title: 'Top tasks', hint: 'by estimated cost',
-          draw: (host) => barList(host, { items: sum.topTasks.map((x) => ({ label: x.task, v: x.usd })), empty: 'No task-attributed usage yet. Name branches like feat/TKT-142-… or run /tokentaby:task TKT-142.' }),
-          table: () => dataTable({ columns: [{ key: 'task', label: 'Task' }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }], rows: sum.topTasks }),
         }));
-      mount([tiles, unpriced, cards]);
+      const work = h('div', { class: 'split' },
+        h('section', { class: 'card' },
+          h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Cost by task' }), h('div', { class: 'hint', text: 'Sort any column. Every turn already knows which ticket it belonged to.' }))),
+          taskCost(tasks.tasks)),
+        chartCard({
+          title: 'Working rhythm', hint: 'Turns by weekday and hour — when the team leans on Claude.',
+          draw: (host) => rhythm(host, pulse.rhythm),
+          table: () => rhythmTable(pulse.rhythm),
+        }));
+      const agents = h('div', { class: 'grid', style: 'margin-top:12px' }, chartCard({
+        title: 'Agent share', hint: 'main agent vs subagent types, by estimated cost',
+        draw: (host) => barList(host, { items: sum.byAgent.map((a) => ({ label: fmt.agent(a.type), v: a.usd, extra: fmt.pct(t.usd ? a.usd / t.usd : 0) })) }),
+        table: () => dataTable({ columns: [{ key: 'type', label: 'Agent', fmt: (r) => fmt.agent(r.type) }, { key: 'usd', label: 'Est. cost', num: true, fmt: (r) => fmt.money(r.usd) }, { key: 'tokens', label: 'Tokens', num: true, fmt: (r) => fmt.tokens(r.tokens) }], rows: sum.byAgent }),
+      }));
+      mount([pulseTiles(pulse), tiles, unpriced, spend, people, work, agents]);
     },
 
     async devs() {
@@ -707,8 +922,8 @@ tbody tr:hover { background: var(--hover); }
         chartCard({
           title: 'Est. cost by model over time', wide: true, hint: 'stacked daily',
           draw: (host) => stackedColumns(host, { days: s.days, keys: s.keys, color: colorOf, label: 'Estimated cost by model per day' }),
-          legend: () => modelLegend(s.keys),
-          table: () => dataTable({ columns: [{ key: 'day', label: 'Day', fmt: (r) => fmt.dayLong(r.day) }, ...s.keys.map((k) => ({ key: k, label: fmt.model(k), num: true, sort: (r) => r.values[k] || 0, fmt: (r) => fmt.money(r.values[k] || 0) }))], rows: s.days, sortKey: 'day' }),
+          top: () => h('div', {}, modelLegend(s.keys, true), peakLine(s)),
+          table: () => seriesTable(s),
         }),
         h('section', { class: 'card wide' }, h('div', { class: 'card-head' }, h('div', {}, h('h2', { text: 'Models' }), h('div', { class: 'hint', text: 'Which developers, tasks and agents used each model.' }))),
           dataTable({
