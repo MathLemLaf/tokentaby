@@ -1,0 +1,3 @@
+{"v":1,"t":"session","ts":"2026-10-22T12:15:24.581Z","dev":"mdsami","session":"c78d0149-e70e-4b9f-b483-904d80557eee","event":"start","source":"startup","cwd_rel":".","branch":"main","model":"claude-opus-5"}
+{"v":1,"t":"prompt","ts":"2026-10-22T12:16:39.442Z","dev":"mdsami","session":"c78d0149-e70e-4b9f-b483-904d80557eee","task":null,"hash":"ddadf892c60e9155","chars":15,"text":"/tokentaby:init"}
+{"v":1,"t":"prompt","ts":"2026-10-22T12:16:54.370Z","dev":"mdsami","session":"c78d0149-e70e-4b9f-b483-904d80557eee","task":null,"hash":"f2829aae730acb0f","chars":73,"text":"git add .tokentaby && git commit -m \"chore: add tokentaby usage tracking\""}

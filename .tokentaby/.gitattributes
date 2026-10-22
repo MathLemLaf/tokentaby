@@ -1,0 +1,2 @@
+# append-only logs: union merges never conflict
+*.ndjson merge=union

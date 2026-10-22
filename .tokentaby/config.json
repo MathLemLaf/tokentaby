@@ -1,0 +1,5 @@
+{
+  "prompt_mode": "truncated",
+  "sync": "ride-along",
+  "truncate_chars": 200
+}
