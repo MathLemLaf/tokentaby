@@ -8,8 +8,10 @@ step() { printf '\n\033[1m▶ %s\033[0m\n' "$1"; }
 
 step "1/5  Envoi du code vers ton fork GitHub (MathLemLaf/tokentaby)"
 git remote set-url origin https://github.com/MathLemLaf/tokentaby.git
-git fetch -q origin main
-if git merge-base --is-ancestor origin/main HEAD; then
+git fetch -q origin
+if git merge-base --is-ancestor HEAD origin/main 2>/dev/null; then
+  echo "Déjà à jour sur GitHub."
+elif git merge-base --is-ancestor origin/main HEAD; then
   git push -q origin HEAD:main
 else
   echo "Ton fork a des commits que je n'ai pas : je pousse sur la branche ma-version (pas sur main)."
@@ -18,7 +20,17 @@ fi
 ok "Code sur GitHub"
 
 step "2/5  Commande « tokentaby » dans le terminal"
-npm install -g "$HOME/dev/tokentaby" >/dev/null 2>&1 || npm install -g "$HOME/dev/tokentaby"
+# pas de npm -g : /usr/local n'est pas modifiable sans sudo. Petit lanceur dans ~/.local/bin.
+mkdir -p "$HOME/.local/bin"
+cat > "$HOME/.local/bin/tokentaby" <<'LANCEUR'
+#!/bin/bash
+exec node "$HOME/dev/tokentaby/scripts/tokentaby.js" "$@"
+LANCEUR
+chmod +x "$HOME/.local/bin/tokentaby"
+if ! grep -q '.local/bin' "$HOME/.zshrc" 2>/dev/null; then
+  printf '\n# tokentaby\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$HOME/.zshrc"
+fi
+export PATH="$HOME/.local/bin:$PATH"
 tokentaby --version
 ok "CLI installée"
 
