@@ -464,7 +464,7 @@ const commands = {
         `${a.dryRun ? 'Importerait' : 'Importé'} ${t.imported} sessions sur ${t.sessions}, depuis ${t.dirs} dossiers de projet` +
           (a.dryRun ? '' : ` (${t.turnRows} lignes de tours, ${t.prompts} prompts)`) +
           `.\n${t.alreadyTracked} déjà suivies, ${t.skipped} ignorées (règle "ignore" ou --since).` +
-          (errs.length ? `\n${errs.length} dossier(s) illisible(s) : ${errs.map((e) => e.dir).join(', ')}` : '') +
+          (errs.length ? `\n${errs.length} dossier(s) en erreur : ${errs[0].error}${errs.length > 1 ? ` (et ${errs.length - 1} autre(s))` : ''}` : '') +
           (a.dryRun ? '' : '\nLes événements sont en file ; tokentaby sync puis tokentaby hub sync pour les envoyer sur GitHub.')
       );
     }
