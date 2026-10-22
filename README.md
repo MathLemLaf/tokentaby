@@ -1,5 +1,7 @@
 # TokenTaby
 
+[![npm](https://img.shields.io/npm/v/tokentaby.svg)](https://www.npmjs.com/package/tokentaby) [![license](https://img.shields.io/npm/l/tokentaby.svg)](LICENSE)
+
 **Claude Code usage tracking for teams: per repo, per developer, committed to git.**
 
 tokentaby is a Claude Code plugin that records every turn in a repository: tokens, model, main agent or subagent, task, branch, prompt and estimated cost. The data is stored as plain NDJSON inside the repo, so `git pull` gives every clone the whole team's numbers. It needs no server and no setup beyond installing the plugin. A local dashboard and a `/tokentaby:usage` command show the totals.
@@ -23,6 +25,21 @@ tokentaby is a Claude Code plugin that records every turn in a repository: token
 - Claude Code **2.1.271 or newer** (tested on 2.1.307)
 - **Node.js 18+** on your `PATH` (the hooks are dependency-free Node scripts that run on macOS, Linux and Windows)
 - **git** — the repo you track must be a git repository
+
+---
+
+## Quick start
+
+```bash
+# 1. The Claude Code plugin: logs usage (once per developer)
+claude plugin marketplace add mdsami/tokentaby
+claude plugin install tokentaby@tokentaby --config dev_id=<your-id>
+
+# 2. Optional: the command line tool, installed globally from npm
+npm install -g tokentaby
+```
+
+Then, inside Claude Code in the repo you want to track, run `/tokentaby:init` and `/tokentaby:backfill`, and commit `.tokentaby/`. See the numbers with `/tokentaby:usage`, or `tokentaby summary` in a terminal.
 
 ---
 
@@ -81,17 +98,45 @@ claude plugin update tokentaby               # then restart Claude Code
 claude plugin uninstall tokentaby
 ```
 
-### The CLI from npm (optional)
+---
 
-The plugin collects usage. The `tokentaby` command line tool reads it: summaries, the dashboard, exports, rollups and the CI validator. It's also published on npm, so you can use it in a terminal or in CI without locating the plugin folder:
+## Install the CLI globally from npm
+
+The plugin collects usage. The `tokentaby` command line tool reads it: summaries, the dashboard, exports, rollups and the CI checks. It's published on npm as [`tokentaby`](https://www.npmjs.com/package/tokentaby), so you can run it from any terminal without locating the plugin folder. It's optional: installing it logs nothing, because collection always comes from the Claude Code plugin.
+
+**Install:**
 
 ```bash
 npm install -g tokentaby
-tokentaby summary          # in any tracked repo
-tokentaby serve            # the dashboard
 ```
 
-It needs only Node.js 18+ and has no dependencies. Installing it doesn't log anything: collection always comes from the Claude Code plugin.
+**Check it worked:**
+
+```bash
+tokentaby --version        # prints the installed version
+tokentaby help             # every command and option
+```
+
+**Use it in any tracked repo:**
+
+```bash
+tokentaby summary                      # today / this week / this month, you vs the team
+tokentaby serve                        # the dashboard on http://localhost:7331
+tokentaby query tasks --task TKT-142   # JSON for scripts
+tokentaby export --kind devs           # CSV
+tokentaby validate --base origin/main  # the CI checks, locally
+```
+
+From outside the repo, add `--repo /path/to/repo`.
+
+**Update or remove:**
+
+```bash
+npm install -g tokentaby@latest   # update to the newest version
+npm uninstall -g tokentaby        # remove
+```
+
+It needs Node.js 18+ and has no dependencies. If `npm install -g` fails with `EACCES` (permission denied), your global npm folder belongs to root: install Node with a version manager such as nvm or fnm rather than using `sudo`.
 
 ---
 
@@ -418,7 +463,7 @@ claude plugin validate .        # manifest + marketplace checks
 claude --plugin-dir .           # run Claude Code with your working copy
 ```
 
-To release: bump `version` in `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` and `package.json`, then run `claude plugin tag`. It creates the `tokentaby--v<version>` tag that teams pin to. Push the tag.
+To release: bump `version` in `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` and `package.json`, then run `claude plugin tag --push`. It creates and pushes the `tokentaby--v<version>` tag that teams pin to. Finally run `npm publish` (your npm account needs 2FA; pass `--otp=<code>`). The tests run first.
 
 ```
 .claude-plugin/        plugin.json (manifest + options), marketplace.json
